@@ -1,0 +1,416 @@
+# $Source: /cvs/G/DRV/slsDetector/slsDetectorApp/Db/slsDetector.template,v $
+# $Revision: 1.1 $    $Date: 2012/06/21 20:21:30 $
+#================================================
+# template for slsDetector driver
+
+#----------------------------------
+# Detector Status, replacing ADBase
+#----------------------------------
+record(mbbi, "$(P)$(R)DetectorState_RBV")
+{
+    field (DESC, "Detector status")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) STATUS")
+    field (ZRST, "idle")
+    field (ZRSV, "NO_ALARM")
+    field (ONST, "error")
+    field (ONSV, "MAJOR")
+    field (TWST, "waiting")
+    field (TWST, "MINOR")
+    field (THST, "finished")
+    field (THSV, "MINOR")
+    field (FRST, "data")
+    field (FRSV, "MINOR")
+    field (FVST, "running")
+    field (FVSV, "MINOR")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Detector Setting
+#----------------------------------
+record (mbbo, "$(P)$(R)Setting")
+{
+    field (DESC, "Detector setting")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_SETTING")
+    field (ZRST, "standard")
+    field (ONST, "fast")
+    field (TWST, "high gain")
+    field (THST, "dynamic gain")
+    field (FRST, "low gain")
+    field (FVST, "medium gain")
+    field (SXST, "very high gain")
+    field (VAL,  "0")
+    field (PINI, "YES")
+}
+record (mbbi, "$(P)$(R)Setting_RBV")
+{
+    field (DESC, "Detector setting")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_SETTING")
+    field (ZRST, "standard")
+    field (ONST, "fast")
+    field (TWST, "high gain")
+    field (THST, "dynamic gain")
+    field (FRST, "low gain")
+    field (FVST, "medium gain")
+    field (SXST, "very high gain")
+    field (SVST, "undefined")
+    field (EIST, "uninitialized")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Delay after trigger
+#----------------------------------
+record(ao, "$(P)$(R)DelayTime")
+{
+    field (DESC, "Delay after trigger")
+    field (DTYP, "asynFloat64")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_TRIGGER_DELAY")
+    field (EGU,  "s")
+    field (PREC, "6")
+    field (VAL,  "0.1")
+    field (PINI, "YES")
+}
+
+record(ai, "$(P)$(R)DelayTime_RBV")
+{
+    field(DESC, "Delay after trigger")
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_TRIGGER_DELAY")
+    field(EGU,  "s")
+    field(PREC, "6")
+    field(SCAN, "I/O Intr")
+}
+#----------------------------------
+# Threshold Energy 
+#----------------------------------
+record (longout, "$(P)$(R)ThresholdEnergy")
+{
+    field (DESC, "Threshold energy")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_THRESHOLD")
+    field (EGU,  "eV")
+    field (VAL,  "4000")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)ThresholdEnergy_RBV")
+{
+    field (DESC, "Threshold energy")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_THRESHOLD")
+    field (EGU,  "eV")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Beam Energy 
+#----------------------------------
+record (longout, "$(P)$(R)BeamEnergy")
+{
+    field (DESC, "Beam energy")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_ENERGY")
+    field (EGU,  "eV")
+    field (VAL,  "8000")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)BeamEnergy_RBV")
+{
+    field (DESC, "Beam energy")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_ENERGY")
+    field (EGU,  "eV")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Online 
+#----------------------------------
+record (bo, "$(P)$(R)Online")
+{
+    field (DESC, "Detector online")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_ONLINE")
+    field (ZNAM, "Offline")
+    field (ONAM, "Online")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (bi, "$(P)$(R)Online_RBV")
+{
+    field (DESC, "Detector online")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_ONLINE")
+    field (ZNAM, "Offline")
+    field (ONAM, "Online")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Flat Field File Path
+#----------------------------------
+record (waveform, "$(P)$(R)FlatFieldPath")
+{
+    field (DESC, "Flat field file path")
+    field (DTYP, "asynOctetWrite")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_FLATFIELD_PATH")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+}
+record (waveform, "$(P)$(R)FlatFieldPath_RBV")
+{
+    field (DESC, "Flat field file path")
+    field (DTYP, "asynOctetRead")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_FLATFIELD_PATH")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Flat Field File Name
+#----------------------------------
+record (waveform, "$(P)$(R)FlatFieldFile")
+{
+    field (DESC, "Flat field file name")
+    field (DTYP, "asynOctetWrite")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_FLATFIELD_FILE")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+}
+record (waveform, "$(P)$(R)FlatFieldFile_RBV")
+{
+    field (DESC, "Flat field file name")
+    field (DTYP, "asynOctetRead")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_FLATFIELD_FILE")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Enable Flat Field Correction
+#----------------------------------
+record (bo, "$(P)$(R)UseFlatField")
+{
+    field (DESC, "Enable flat field")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_FLATFIELD")
+    field (ZNAM, "Disable")
+    field (ONAM, "Enable")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (bi, "$(P)$(R)UseFlatField_RBV")
+{
+    field (DESC, "Enable flat field")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_FLATFIELD")
+    field (ZNAM, "Disabled")
+    field (ONAM, "Enabled")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Enable Count Rate Correction
+#----------------------------------
+record (bo, "$(P)$(R)UseCountRate")
+{
+    field (DESC, "Enable count rate")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_COUNTRATE")
+    field (ZNAM, "Disable")
+    field (ONAM, "Enable")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (bi, "$(P)$(R)UseCountRate_RBV")
+{
+    field (DESC, "Enable count rate")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_COUNTRATE")
+    field (ZNAM, "Disabled")
+    field (ONAM, "Enabled")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Enable Pixel Mask Correction
+#----------------------------------
+record (bo, "$(P)$(R)UsePixelMask")
+{
+    field (DESC, "Enable pixel mask")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_PIXELMASK")
+    field (ZNAM, "Disable")
+    field (ONAM, "Enable")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (bi, "$(P)$(R)UsePixelMask_RBV")
+{
+    field (DESC, "Enable pixel mask")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_PIXELMASK")
+    field (ZNAM, "Disabled")
+    field (ONAM, "Enabled")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Enable Angular Conversion
+#----------------------------------
+record (bo, "$(P)$(R)UseAngularConv")
+{
+    field (DESC, "Enable angular conversion")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_ANGULAR_CONV")
+    field (ZNAM, "Disable")
+    field (ONAM, "Enable")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (bi, "$(P)$(R)UseAngularConv_RBV")
+{
+    field (DESC, "Enable angular conversion")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_ANGULAR_CONV")
+    field (ZNAM, "Disabled")
+    field (ONAM, "Enabled")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Enable Angular Conversion
+#----------------------------------
+record (longout, "$(P)$(R)BitDepth")
+{
+    field (DESC, "Detector bit depth")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_BIT_DEPTH")
+    field (VAL,  "24")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)BitDepth_RBV")
+{
+    field (DESC, "Detector bit depth")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_BIT_DEPTH")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Number of Gates
+#----------------------------------
+record (longout, "$(P)$(R)NumGates")
+{
+    field (DESC, "Number of gates")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_NUM_GATES")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)NumGates_RBV")
+{
+    field (DESC, "Number of gates")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_NUM_GATES")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Number of Cycles
+#----------------------------------
+record (longout, "$(P)$(R)NumCycles")
+{
+    field (DESC, "Number of cycles")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_NUM_CYCLES")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)NumCycles_RBV")
+{
+    field (DESC, "Number of cycles")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_NUM_CYCLES")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Number of Frames
+#----------------------------------
+record (longout, "$(P)$(R)NumFrames")
+{
+    field (DESC, "Number of frames")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_NUM_FRAMES")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)NumFrames_RBV")
+{
+    field (DESC, "Number of frames")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_NUM_FRAMES")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Timing Mode
+#----------------------------------
+record (mbbo, "$(P)$(R)TimingMode")
+{
+    field (DESC, "Detector timing mode")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_TMODE")
+    field (ZRST, "auto")
+    field (ONST, "trigger")
+    field (TWST, "ro_trigger")
+    field (THST, "gating")
+    field (FRST, "triggered_gating")
+    field (VAL,  "0")
+    field (PINI, "YES")
+}
+record (mbbi, "$(P)$(R)TimingMode_RBV")
+{
+    field (DESC, "Detector timing mode")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_TMODE")
+    field (ZRST, "auto")
+    field (ONST, "trigger")
+    field (TWST, "ro_trigger")
+    field (THST, "gating")
+    field (FRST, "triggered_gating")
+    field (FVST, "unknown")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Setup File
+#----------------------------------
+record (waveform, "$(P)$(R)SetupFile")
+{
+    field (DESC, "Detector setup file")
+    field (DTYP, "asynOctetWrite")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_SETUP_FILE")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+}
+
+record (busy, "$(P)$(R)LoadSetup")
+{
+    field (DESC, "Load detector setup")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_LOAD_SETUP")
+    field (ZNAM, "Done")
+    field (ONAM, "Load")
+}
+
+record (busy, "$(P)$(R)SaveSetup")
+{
+    field (DESC, "Save detector setup")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_SAVE_SETUP")
+    field (ZNAM, "Done")
+    field (ONAM, "Save")
+}
+

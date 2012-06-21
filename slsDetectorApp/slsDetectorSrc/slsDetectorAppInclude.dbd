@@ -1,0 +1,3 @@
+include "slsDetectorSupport.dbd"
+include "commonDriverSupport.dbd"
+include "drvAsynIPPort.dbd"
