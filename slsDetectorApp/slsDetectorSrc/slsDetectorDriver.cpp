@@ -49,7 +49,7 @@ static const char *driverName = "slsDetectorDriver";
 /** Driver for Dectris Pilatus pixel array detectors using their camserver server over TCP/IP socket */
 class slsDetectorDriver : public ADDriver {
 public:
-    slsDetectorDriver(const char *portName, const char *configFileName,
+    slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, 
                     int maxBuffers, size_t maxMemory,
                     int priority, int stackSize);
 
@@ -498,11 +498,11 @@ void slsDetectorDriver::report(FILE *fp, int details)
     ADDriver::report(fp, details);
 }
 
-extern "C" int slsDetectorConfig(const char *portName, const char *configFileName, 
+extern "C" int slsDetectorConfig(const char *portName, const char *configFileName, int detectorId, 
                                     int maxBuffers, size_t maxMemory,
                                     int priority, int stackSize)
 {
-    new slsDetectorDriver(portName, configFileName, maxBuffers, maxMemory,
+    new slsDetectorDriver(portName, configFileName, detectorId, maxBuffers, maxMemory,
                         priority, stackSize);
     return(asynSuccess);
 }
@@ -512,6 +512,7 @@ extern "C" int slsDetectorConfig(const char *portName, const char *configFileNam
   * and sets reasonable default values for the parameters defined in this class, asynNDArrayDriver, and ADDriver.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] configFileName The configuration file to the detector.
+  * \param[in] detectorId The detector index number running on the same system.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] maxBuffers The maximum number of NDArray buffers that the NDArrayPool for this driver is 
   *            allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
@@ -520,7 +521,7 @@ extern "C" int slsDetectorConfig(const char *portName, const char *configFileNam
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   */
-slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFileName,
+slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, 
                                 int maxBuffers, size_t maxMemory,
                                 int priority, int stackSize)
 
@@ -562,7 +563,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 
 
     /* Connect to camserver */
-    pDetector = new multiSlsDetector(); 
+    pDetector = new multiSlsDetector(detectorId); 
     if (pDetector->readConfigurationFile(configFileName)  ==  multiSlsDetector::FAIL) {
         status = asynError; 
         printf("%s:%s: ERROR: slsDetectorDriver::readConfigurationFile %s failed, status=%d\n", 
@@ -617,21 +618,23 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 /* Code for iocsh registration */
 static const iocshArg slsDetectorConfigArg0 = {"Port name", iocshArgString};
 static const iocshArg slsDetectorConfigArg1 = {"config file name", iocshArgString};
-static const iocshArg slsDetectorConfigArg2 = {"maxBuffers", iocshArgInt};
-static const iocshArg slsDetectorConfigArg3 = {"maxMemory", iocshArgInt};
-static const iocshArg slsDetectorConfigArg4 = {"priority", iocshArgInt};
-static const iocshArg slsDetectorConfigArg5 = {"stackSize", iocshArgInt};
+static const iocshArg slsDetectorConfigArg2 = {"detector index", iocshArgInt}; 
+static const iocshArg slsDetectorConfigArg3 = {"maxBuffers", iocshArgInt};
+static const iocshArg slsDetectorConfigArg4 = {"maxMemory", iocshArgInt};
+static const iocshArg slsDetectorConfigArg5 = {"priority", iocshArgInt};
+static const iocshArg slsDetectorConfigArg6 = {"stackSize", iocshArgInt};
 static const iocshArg * const slsDetectorConfigArgs[] =  {&slsDetectorConfigArg0,
                                                               &slsDetectorConfigArg1,
                                                               &slsDetectorConfigArg2,
                                                               &slsDetectorConfigArg3,
                                                               &slsDetectorConfigArg4,
-                                                              &slsDetectorConfigArg5};
-static const iocshFuncDef configSlsDetector = {"slsDetectorConfig", 6, slsDetectorConfigArgs};
+                                                              &slsDetectorConfigArg5, 
+                                                              &slsDetectorConfigArg6};
+static const iocshFuncDef configSlsDetector = {"slsDetectorConfig", 7, slsDetectorConfigArgs};
 static void configSlsDetectorCallFunc(const iocshArgBuf *args)
 {
-    slsDetectorConfig(args[0].sval, args[1].sval, 
-            args[2].ival, args[3].ival, args[4].ival,  args[5].ival);
+    slsDetectorConfig(args[0].sval, args[1].sval, args[2].ival, 
+            args[3].ival, args[4].ival, args[5].ival,  args[6].ival);
 }
 
 
