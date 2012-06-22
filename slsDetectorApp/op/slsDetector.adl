@@ -1700,7 +1700,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)DetectorState_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	align="horiz. centered"
@@ -1758,7 +1758,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)UseFlatField_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	limits {
@@ -1773,7 +1773,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)UseCountRate_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	limits {
@@ -1788,7 +1788,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)UsePixelMask_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	limits {
@@ -1803,7 +1803,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)UseAngularConv_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	limits {
@@ -1818,7 +1818,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)ThresholdEnergy_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	align="horiz. right"
@@ -1834,7 +1834,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)BeamEnergy_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	align="horiz. right"
@@ -1850,7 +1850,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)FlatFieldFile_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	format="string"
@@ -1866,7 +1866,7 @@ text {
 	}
 	monitor {
 		chan="$(P)$(R)FlatFieldPath_RBV"
-		clr=14
+		clr=54
 		bclr=4
 	}
 	format="string"
