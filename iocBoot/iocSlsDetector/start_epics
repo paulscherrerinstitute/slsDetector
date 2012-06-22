@@ -1,0 +1,3 @@
+medm -x -macro "P=13SD1:, R=cam1:" slsDetector.adl &
+../../bin/linux-x86/slsDetectorApp st.cmd
+

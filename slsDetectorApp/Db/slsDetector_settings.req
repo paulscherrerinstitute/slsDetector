@@ -1,6 +1,6 @@
 $(P)$(R)Setting
-$(P)$(R)Energy
-$(P)$(R)Threshold
+$(P)$(R)BeamEnergy
+$(P)$(R)ThresholdEnergy
 $(P)$(R)Online
 $(P)$(R)FlatFieldPath
 $(P)$(R)FlatFieldFile
