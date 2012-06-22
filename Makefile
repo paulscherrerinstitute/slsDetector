@@ -1,18 +1,17 @@
-include /ioc/tools/driver.makefile
-EXCLUDE_VERSIONS=3.13
-BUILDCLASSES=Linux
-CROSS_COMPILER_TARGET_ARCHS=$(EPICS_HOST_ARCH)
+#Makefile at top of application tree
+TOP = .
+include $(TOP)/configure/CONFIG
+DIRS := $(DIRS) $(filter-out $(DIRS), configure)
+DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *App))
+DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocBoot))
 
-SOURCES+=slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
-DBDS+=slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
+define DIR_template
+ $(1)_DEPEND_DIRS = configure
+endef
+$(foreach dir, $(filter-out configure,$(DIRS)),$(eval $(call DIR_template,$(dir))))
 
-SLS_DET_SOFTWARE = /afs/psi.ch/user/w/wang_x1/software/slsDetectorSoftware
-#SLS_DET_SOFTWARE = /afs/psi.ch/project/mythen/newMythenSoftware/slsDetectorSoftware
+iocBoot_DEPEND_DIRS += $(filter %App,$(DIRS))
 
-USR_INCLUDES+=-I$(SLS_DET_SOFTWARE)/commonFiles \
-			  -I$(SLS_DET_SOFTWARE)/slsDetector \
-			  -I$(SLS_DET_SOFTWARE)/slsDetectorAnalysis \
-			  -I$(SLS_DET_SOFTWARE)/multiSlsDetector
-USR_CFLAGS+=-DVERBOSE -g
-USR_LDFLAGS +=  -L$(SLS_DET_SOFTWARE) -Wl,-rpath $(SLS_DET_SOFTWARE)
-USR_LIBS += SlsDetector pthread
+include $(TOP)/configure/RULES_TOP
+
+
