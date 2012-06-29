@@ -61,6 +61,7 @@ public:
     virtual void report(FILE *fp, int details); 
 
     void dataCallback(detectorData *pData); /* This should be private but is called from C so must be public */
+    void pollTask(); 
     void acquisitionTask(); 
     void shutdown(); 
  
@@ -120,10 +121,39 @@ void acquisitionTaskC(void *drvPvt)
     pDetector->acquisitionTask(); 
 }
 
+void pollTaskC(void *drvPvt)
+{
+    slsDetectorDriver *pDetector = (slsDetectorDriver*)drvPvt; 
+    pDetector->pollTask(); 
+}
+
 void slsDetectorDriver::shutdown()
 {
     if (pDetector)
         delete pDetector; 
+}
+
+void slsDetectorDriver::pollTask()
+{
+    int acquire; 
+    /* Poll detector running status every second*/
+    while (1) {
+        epicsThreadSleep(1); 
+        /* Update only if acquiring */
+        this->lock(); 
+        getIntegerParam(ADAcquire, &acquire);
+        this->unlock(); 
+        if (!acquire) continue; 
+
+        int detStatus = pDetector->getRunStatus();
+        int fileIndex = pDetector->getFileIndex(); 
+        /* Update detector status */
+        this->lock(); 
+        setIntegerParam(ADStatus, detStatus);
+        setIntegerParam(NDFileNumber, fileIndex); 
+        callParamCallbacks(); 
+        this->unlock(); 
+    }
 }
 
 void slsDetectorDriver::acquisitionTask()
@@ -161,19 +191,6 @@ void slsDetectorDriver::acquisitionTask()
         pDetector->startMeasurement();
         this->lock(); 
 
-        /* Wait for acquisition to complete, but allow acquire stop events to be handled */
-        while (1) {
-            /* Release the lock while waiting */
-            this->unlock(); 
-            epicsThreadSleep(0.2); 
-            detStatus = pDetector->getRunStatus(); 
-            this->lock(); 
-            if (detStatus == 0 || detStatus == 1 || detStatus == 3) break; 
-            /* Update detector status */
-            setIntegerParam(ADStatus, detStatus);
-            setIntegerParam(NDFileNumber,    pDetector->getFileIndex()); 
-            callParamCallbacks(); 
-        }
         /* Update detector status */
         setIntegerParam(ADStatus, pDetector->getRunStatus());
         fileNumber = pDetector->getFileIndex(); 
@@ -612,6 +629,13 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
                                 epicsThreadPriorityMedium,
                                 epicsThreadGetStackSize(epicsThreadStackMedium),
                                 (EPICSTHREADFUNC)acquisitionTaskC,
+                                this) == NULL);
+
+    /* Create the thread that polls status */
+    status = (epicsThreadCreate("pollTask",
+                                epicsThreadPriorityMedium,
+                                epicsThreadGetStackSize(epicsThreadStackMedium),
+                                (EPICSTHREADFUNC)pollTaskC,
                                 this) == NULL);
 }
 
