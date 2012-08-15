@@ -17,8 +17,8 @@ dbLoadRecords("$(AREA_DETECTOR)/ADApp/Db/ADBase.template",   "P=$(PREFIX),R=cam1
 dbLoadRecords("$(AREA_DETECTOR)/ADApp/Db/NDFile.template",   "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(TOP)/slsDetectorApp/Db/slsDetector.template",        "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 
-
-NDStdArraysConfigure("Image1", 3, 0, $(PORT), 0)
+# Create a standard arrays plugin
+NDStdArraysConfigure("Image1", 3, 0, "$(PORT)", 0)
 dbLoadRecords("$(AREA_DETECTOR)/ADApp/Db/NDPluginBase.template","P=$(PREFIX),R=image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),NDARRAY_ADDR=0")
 dbLoadRecords("$(AREA_DETECTOR)/ADApp/Db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=Image1,ADDR=0,TIMEOUT=1,TYPE=Float32,FTVL=FLOAT,NELEMENTS=10000")
 
