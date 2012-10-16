@@ -17,7 +17,8 @@
 #include <epicsExit.h>
 #include <epicsThread.h>
 
-#include "multiSlsDetector.h"
+#include "slsDetectorUsers.h"
+#include "detectorData.h"
 
 #include <epicsExport.h>
 
@@ -92,7 +93,7 @@ public:
     /* These are the methods that are new to this class */
 
     /* Our data */
-    multiSlsDetector *pDetector; 
+    slsDetectorUsers *pDetector; 
     epicsEventId startEventId;
 };
 
@@ -145,7 +146,7 @@ void slsDetectorDriver::pollTask()
         this->unlock(); 
         if (!acquire) continue; 
 
-        int detStatus = pDetector->getRunStatus();
+        int detStatus = pDetector->getDetectorStatus();
         int fileIndex = pDetector->getFileIndex(); 
         /* Update detector status */
         this->lock(); 
@@ -160,7 +161,6 @@ void slsDetectorDriver::acquisitionTask()
 {
     int status = asynSuccess; 
     int acquire; 
-    int detStatus; 
     char filePath[MAX_FILENAME_LEN];
     char fileName[MAX_FILENAME_LEN];
     int  fileNumber; 
@@ -192,7 +192,7 @@ void slsDetectorDriver::acquisitionTask()
         this->lock(); 
 
         /* Update detector status */
-        setIntegerParam(ADStatus, pDetector->getRunStatus());
+        setIntegerParam(ADStatus, pDetector->getDetectorStatus());
         fileNumber = pDetector->getFileIndex(); 
         setIntegerParam(NDFileNumber, fileNumber); 
     
@@ -367,7 +367,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         retVal = pDetector->setFileIndex(value); 
         status |= setIntegerParam(NDFileNumber, retVal); 
     } else if (function == SDSetting) {
-        retVal = pDetector->setSettings((slsDetectorDefs::detectorSettings)value); 
+        retVal = pDetector->setSettings(value); 
         status |= setIntegerParam(SDSetting, retVal); 
     } else if (function == SDThreshold) {
         retVal = pDetector->setThresholdEnergy(value); 
@@ -409,16 +409,16 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         status |= setIntegerParam(SDTimingMode, retVal); 
     } else if (function == SDLoadSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
-        if (pDetector->retrieveDetectorSetup(filePath) != slsDetectorDefs::OK)
+        if (pDetector->retrieveDetectorSetup(filePath) != 0)
             status |= asynError; 
         setIntegerParam(SDLoadSetup, 0); 
     } else if (function == SDSaveSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
-        if (pDetector->dumpDetectorSetup(filePath) != slsDetectorDefs::OK)
+        if (pDetector->dumpDetectorSetup(filePath) != 0)
             status |= asynError; 
         setIntegerParam(SDSaveSetup, 0); 
     } else if (function == ADAcquire) {
-        int runStatus = pDetector->getRunStatus(); 
+        int runStatus = pDetector->getDetectorStatus(); 
         if (value) {
             if (runStatus != 0  && runStatus  !=  3)
                 /* Detector not ready */
@@ -580,8 +580,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 
 
     /* Connect to camserver */
-    pDetector = new multiSlsDetector(detectorId); 
-    if (pDetector->readConfigurationFile(configFileName)  ==  multiSlsDetector::FAIL) {
+    pDetector = new slsDetectorUsers(detectorId); 
+    if (pDetector->readConfigurationFile(configFileName) != 0) {
         status = asynError; 
         printf("%s:%s: ERROR: slsDetectorDriver::readConfigurationFile %s failed, status=%d\n", 
             driverName, functionName, configFileName, status);
@@ -609,7 +609,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionDir().c_str()); 
     status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionFile().c_str()); 
  
-    status |= setIntegerParam(ADStatus,        pDetector->getRunStatus());
+    status |= setIntegerParam(ADStatus,        pDetector->getDetectorStatus());
 
     callParamCallbacks();
 

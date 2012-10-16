@@ -4,8 +4,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-INC += multiSlsDetector.h  sls_detector_defs.h sls_detector_funcs.h slsDetectorUsers.h slsDetectorUtils.h slsDetectorActions.h postProcessing.h
-INC += fileIO.h detectorData.h angularConversion.h slsDetectorBase.h
+INC += slsDetectorUsers.h detectorData.h
 
 # These libraries are built from slsDetectorSoftware
 ifeq (linux-x86_64, $(findstring linux-x86_64, $(T_A)))
