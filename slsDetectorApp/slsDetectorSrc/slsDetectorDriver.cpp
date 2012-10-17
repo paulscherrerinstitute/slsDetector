@@ -430,6 +430,9 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         if (!value)
             /* Stop measurement */
             pDetector->stopMeasurement(); 
+    } else if (function  ==  NDAutoSave) {
+        int autoSave = pDetector->enableWriteToFile(value);
+        status |= setIntegerParam(NDAutoSave,  autoSave); 
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM) status = ADDriver::writeInt32(pasynUser, value);
@@ -588,6 +591,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     }
 
     /* Set some default values for parameters */
+    status |= setIntegerParam(SDOnline, pDetector->setOnline(1)); 
+
     status =  setStringParam (ADManufacturer, pDetector->getDetectorDeveloper().c_str());
     status |= setStringParam (ADModel,        pDetector->getDetectorType().c_str());
 
@@ -595,6 +600,13 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     pDetector->getMaximumDetectorSize(sensorSizeX, sensorSizeY);
     status |= setIntegerParam(ADMaxSizeX, sensorSizeX);
     status |= setIntegerParam(ADMaxSizeY, sensorSizeY);
+
+    int minX,  minY, sizeX, sizeY; 
+    pDetector->getDetectorSize(minX, minY, sizeX, sizeY); 
+    status |= setIntegerParam(ADMinX,  minX);
+    status |= setIntegerParam(ADMinY,  minY);
+    status |= setIntegerParam(ADSizeX, sizeX);
+    status |= setIntegerParam(ADSizeY, sizeY);
 
     status |= setIntegerParam(NDArraySize, 0);
     status |= setIntegerParam(NDDataType,  NDFloat32);

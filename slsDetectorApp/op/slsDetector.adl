@@ -5,8 +5,8 @@ file {
 }
 display {
 	object {
-		x=10
-		y=160
+		x=23
+		y=106
 		width=1270
 		height=670
 	}
@@ -831,7 +831,7 @@ composite {
 text {
 	object {
 		x=733
-		y=451
+		y=484
 		width=133
 		height=20
 	}
@@ -844,7 +844,7 @@ text {
 "text update" {
 	object {
 		x=875
-		y=452
+		y=485
 		width=370
 		height=18
 	}
@@ -2034,5 +2034,47 @@ composite {
 			limits {
 			}
 		}
+	}
+}
+text {
+	object {
+		x=767
+		y=452
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Save File"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=874
+		y=453
+		width=90
+		height=20
+	}
+	control {
+		chan="$(P)$(R)AutoSave"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=969
+		y=453
+		width=100
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)AutoSave_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
 	}
 }
