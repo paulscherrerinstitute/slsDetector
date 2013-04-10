@@ -16,7 +16,9 @@ DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
 #USR_LDFLAGS +=  -L$(SLS_DET_SOFTWARE) -Wl,-rpath $(SLS_DET_SOFTWARE)
 
 # For builtin library
+# convert SL5-x86, SL6-x86 to linux x-86
+ARCH=linux-$(word 2,$(subst -, , $(EPICS_HOST_ARCH)))
 USR_INCLUDES += -I../../slsDetectorApp/slsDetectorSupport
-USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/linux-x86
+USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
 USR_LIBS += SlsDetector pthread

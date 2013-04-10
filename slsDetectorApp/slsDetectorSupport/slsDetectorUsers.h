@@ -23,14 +23,49 @@ class multiSlsDetector;
 
 
 using namespace std;
+
+
+
+/*
+   \mainpage 
+<CENTER><H1>API for SLS detectors data acquisition</H1></CENTER>
+<HR>
+*/
 /** 
+    \mainpage 
+     <img  src="psi_logo_150.gif" alt="Paul Scherrer Institut"> 
 
-@libdoc The slsDetectorUsers class is a minimal purely virtual interface class which should be instantiated by the users in their acquisition software (EPICS, spec etc.). More advanced configuration functions are not implemented and can be written in a configuration file tha can be read/written.
+<H1>API for SLS detectors data acquisition</H1>
+
+<HR>
+
+   Although the SLS detectors group delvelops several types of detectors (1/2D, counting/integrating etc.) it is common interest of the group to use a common platfor for data acquisition
+ 
+   The architecture of the acquisitions system is intended as follows:
+   \li A socket server running on the detector (or more than one in some special cases)
+   \li C++ classes common to all detectors for client-server communication. These can be supplied to users as libraries and embedded also in acquisition systems which are not developed by the SLS
+   \li the possibility of using a Qt-based graphical user interface (with eventually root analisys capabilities)
+   \li the possibility of running all commands from command line. In order to ensure a fast operation of this so called "text client" the detector parameters should not be re-initialized everytime. For this reason a shared memory block is allocated where the main detector flags and parameters are stored 
+   \li a Root library for data postprocessing and detector calibration (energy, angle).
 
 
-This class contains the functions accessible by the users to control the slsDetectors (both multiSlsDetector and slsDetector)
+The slsDetectorUsers class is a minimal purely virtual interface class which should be instantiated by the users in their acquisition software (EPICS, spec etc.). More advanced configuration functions are not implemented and can be written in a configuration file tha can be read/written.
 
- * @short This is the base class for detector functionalities of interest for the users.
+
+   \authors <a href="mailto:anna.bergamaschi@psi.ch">Anna Bergamaschi</a>, <a href="mailto:dhanya.maliakal@psi.ch">Dhanya Maliakal</a>
+   @version 0.2
+<H2>Currently supported detectors</H2>
+\li MYTHEN
+\li GOTTHARD controls
+<H3>Coming soon</H3>
+\li GOTTHARD data receiver
+\li EIGER
+
+@libdoc The slsDetectorUsers class is a minimal purely virtual interface class which should be instantiated by the users in their acquisition software (EPICS, spec etc.). More advanced configuration functions are not implemented and can be written in a configuration or parameters file that can be read/written.
+
+*/
+/**
+  @short This is the base class for detector functionalities of interest for the users. Can be emebedded in the users custom interface e.g. EPICS, Lima etc.
 
 */
 
@@ -45,7 +80,7 @@ class slsDetectorUsers
 
    
    /**  @short virtual destructor */
-   ~slsDetectorUsers();
+   virtual ~slsDetectorUsers();
 
 
 
@@ -91,7 +126,7 @@ class slsDetectorUsers
      \param s file path
      \returns file path
   */
-   string setFilePath(string s);  
+   string setFilePath(string s);
 
   /** 
       @short 
@@ -120,7 +155,7 @@ class slsDetectorUsers
   */
    int setFileIndex(int i);
 
-  /** 
+   /**
          @short get flat field corrections file directory
     \returns flat field correction file directory
   */
@@ -355,15 +390,47 @@ class slsDetectorUsers
      \param userCallback function for plotting/analyzing the data
   */
 
-   void registerDataCallback(int( *userCallback)(detectorData*, void*), void *pArg);
+   void registerDataCallback(int( *userCallback)(detectorData*, int, void*), void *pArg);
 
   /**
-     @short register calbback for accessing raw data
-     \param userCallback function for postprocessing and saving the data  
+     @short register callback for accessing raw data - if the rawDataCallback is registered, no filewriting/postprocessing will be carried on automatically by the software - the raw data are deleted by the software
+     \param userCallback function for postprocessing and saving the data -  p is the pointer to the data, n is the number of channels
   */
   
-   void registerRawDataCallback(int( *userCallback)(double*, void*), void *pArg);
+   void registerRawDataCallback(int( *userCallback)(double* p, int n, void*), void *pArg);
+
+  /** 
+     @short function to initalize a set of measurements (reset binning if angular conversion, reset summing otherwise)  - can be overcome by the user's functions thanks to the virtual property
+     \param refresh if 1, all parameters like ffcoefficients, badchannels, ratecorrections etc. are reset (should be called at least onece with this option), if 0 simply reset merging/ summation
+  */
   
+  virtual void initDataset(int refresh);
+
+
+  /**
+     @short adds frame to merging/summation  - can be overcome by the user's functions thanks to the virtual property
+     \param data pointer to the raw data
+     \param pos encoder position
+     \param i0 beam monitor readout for intensity normalization (if 0 not performed)
+     \param t exposure time in seconds, required only if rate corrections
+     \param fname file name (unused since filewriting would be performed by the user)
+     \param var optional parameter - unused.
+  */
+  
+  virtual void addFrame(double *data, double pos, double i0, double t, string fname, double var);
+
+  /**
+     @short finalizes the data set returning the array of angles, values and errors to be used as final data - can be overcome by the user's functions thanks to the virtual property
+     \param a pointer to the array of angles - can be null if no angular coversion is required
+     \param v pointer to the array of values
+     \param e pointer to the array of errors
+     \param np reference returning the number of points
+  */
+  
+  virtual void finalizeDataset(double *a, double *v, double *e, int &np); 
+
+
+
   /**
      @short register calbback for accessing detector final data
      \param func function to be called at the end of the acquisition. gets detector status and progress index as arguments
