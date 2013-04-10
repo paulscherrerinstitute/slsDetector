@@ -47,7 +47,7 @@ static const char *driverName = "slsDetectorDriver";
 #define SDSaveSetupString       "SD_SAVE_SETUP"
 
 
-/** Driver for Dectris Pilatus pixel array detectors using their camserver server over TCP/IP socket */
+/** Driver for sls array detectors using over TCP/IP socket */
 class slsDetectorDriver : public ADDriver {
 public:
     slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, 
@@ -104,7 +104,7 @@ static void c_shutdown(void* arg) {
     p->shutdown(); 
 }
 
-int dataCallbackC(detectorData *pData, void *pArg) 
+int dataCallbackC(detectorData *pData, int n, void *pArg) 
 {
    if (pData == NULL)
        return 0; 
