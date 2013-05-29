@@ -42,6 +42,7 @@ static const char *driverName = "slsDetectorDriver";
 #define SDNumCyclesString       "SD_NUM_CYCLES"
 #define SDNumFramesString       "SD_NUM_FRAMES"
 #define SDTimingModeString      "SD_TMODE"
+#define SDRecvModeString        "SD_RECV_MODE"
 #define SDSetupFileString       "SD_SETUP_FILE"
 #define SDLoadSetupString       "SD_LOAD_SETUP"
 #define SDSaveSetupString       "SD_SAVE_SETUP"
@@ -84,6 +85,7 @@ public:
     int SDNumCycles; 
     int SDNumFrames; 
     int SDTimingMode; 
+    int SDRecvMode;
     int SDSetupFile; 
     int SDLoadSetup; 
     int SDSaveSetup; 
@@ -106,14 +108,14 @@ static void c_shutdown(void* arg) {
 
 int dataCallbackC(detectorData *pData, int n, void *pArg) 
 {
-   if (pData == NULL)
+    if (pData == NULL)
        return 0; 
   
     if (pArg  != NULL) {
         slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg; 
         pDetector->dataCallback(pData); 
     }
-   return 0; 
+    return 0; 
 }
 
 void acquisitionTaskC(void *drvPvt)
@@ -213,7 +215,8 @@ void slsDetectorDriver::acquisitionTask()
 void slsDetectorDriver::dataCallback(detectorData *pData)
 {
     NDArray *pImage; 
-    int ndims = 2, dims[2];
+    int ndims = 2;
+    size_t dims[2];
     int totalBytes; 
     int imageCounter;
     int arrayCallbacks;
@@ -430,9 +433,12 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         if (!value)
             /* Stop measurement */
             pDetector->stopMeasurement(); 
-    } else if (function  ==  NDAutoSave) {
+    } else if (function ==  NDAutoSave) {
         int autoSave = pDetector->enableWriteToFile(value);
-        status |= setIntegerParam(NDAutoSave,  autoSave); 
+        status |= setIntegerParam(NDAutoSave, autoSave); 
+    } else if (function == SDRecvMode) {
+        int recvMode = pDetector->setReceiverMode(value);
+        status |= setIntegerParam(SDRecvMode, recvMode);
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM) status = ADDriver::writeInt32(pasynUser, value);
@@ -469,14 +475,14 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
     status = (asynStatus) setDoubleParam(addr, function, value);
 
     if (function == ADAcquireTime) {
-        pDetector->setExposureTime((int64_t)(value * 1e+9)); 
-        status |= setDoubleParam(ADAcquireTime,    pDetector->setExposureTime()/1e+9);
+        pDetector->setExposureTime(value * 1e+9); 
+        status |= setDoubleParam(ADAcquireTime,    pDetector->setExposureTime(-1)/1e+9);
     } else if (function == ADAcquirePeriod) {
-        pDetector->setExposurePeriod((int64_t)(value * 1e+9)); 
-        status |= setDoubleParam(ADAcquirePeriod,  pDetector->setExposurePeriod()/1e+9); 
+        pDetector->setExposurePeriod(value * 1e+9); 
+        status |= setDoubleParam(ADAcquirePeriod,  pDetector->setExposurePeriod(-1)/1e+9); 
     } else if (function == SDDelayTime) {
-        pDetector->setDelayAfterTrigger((int64_t)(value * 1e+9)); 
-        status |= setDoubleParam(SDDelayTime,   pDetector->setDelayAfterTrigger()/1e+9); 
+        pDetector->setDelayAfterTrigger(value * 1e+9); 
+        status |= setDoubleParam(SDDelayTime,   pDetector->setDelayAfterTrigger(-1)/1e+9); 
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < NUM_SD_PARAMS) status = ADDriver::writeFloat64(pasynUser, value);
@@ -578,6 +584,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDNumCyclesString,      asynParamInt32,  &SDNumCycles); 
     createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames); 
     createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode); 
+    createParam(SDRecvModeString,       asynParamInt32,  &SDRecvMode);
     createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile); 
     createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup); 
     createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 

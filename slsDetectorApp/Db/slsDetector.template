@@ -1,5 +1,5 @@
 # $Source: /cvs/G/DRV/slsDetector/slsDetectorApp/Db/slsDetector.template,v $
-# $Revision: 1.2 $    $Date: 2012/06/22 08:34:36 $
+# $Revision: 1.3 $    $Date: 2013/05/29 07:21:58 $
 #================================================
 # template for slsDetector driver
 
@@ -418,6 +418,23 @@ record (mbbi, "$(P)$(R)TimingMode_RBV")
     field (FVST, "unknown")
     field (FVVL, "5")
     field (SCAN, "I/O Intr")
+}
+#----------------------------------
+# Receiver callback frequency
+#----------------------------------
+record (longout, "$(P)$(R)ReceiverMode")
+{
+    field (DESC, "Data receiver mode")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_RECV_MODE")
+    field (PINI, "YES")
+}
+record (longin, "$(P)$(R)ReceiverMode_RBV")
+{
+    field (DESC, "Data receiver mode")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_RECV_MODE")
+    field (PINI, "YES")
 }
 #----------------------------------
 # Setup File
