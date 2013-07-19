@@ -11,6 +11,7 @@ $(P)$(R)UsePixelMask
 $(P)$(R)UseAngularConv
 $(P)$(R)BitDepth
 $(P)$(R)TimingMode
+#(P)$(R)ReceiverMode
 $(P)$(R)DelayTime
 $(P)$(R)NumGates
 $(P)$(R)NumCycles

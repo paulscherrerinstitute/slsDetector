@@ -1,7 +1,7 @@
 
 file {
 	name="/afs/psi.ch/user/w/wang_x1/xxx/G/DRV/slsDetector/slsDetectorApp/op/slsDetector.adl"
-	version=030104
+	version=030105
 }
 display {
 	object {
@@ -1694,7 +1694,7 @@ text {
 "text update" {
 	object {
 		x=536
-		y=454
+		y=483
 		width=143
 		height=18
 	}
@@ -1876,7 +1876,7 @@ text {
 text {
 	object {
 		x=361
-		y=451
+		y=480
 		width=160
 		height=20
 	}
@@ -2075,6 +2075,49 @@ menu {
 		bclr=4
 	}
 	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=386
+		y=415
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Receiver Mode"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=521
+		y=415
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)ReceiverMode"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=586
+		y=416
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ReceiverMode_RBV"
+		clr=54
+		bclr=4
+	}
 	limits {
 	}
 }
