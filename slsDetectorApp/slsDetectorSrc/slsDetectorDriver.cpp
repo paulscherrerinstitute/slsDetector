@@ -228,14 +228,14 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
 
     dims[0] = pData->npoints; 
     dims[1] = pData->npy; 
-    totalBytes = dims[0]*dims[1]*4; 
+    totalBytes = dims[0]*dims[1]*8; 
     if (dims[1] == 1) ndims = 1; 
 
     /* Get the current time */
     epicsTimeGetCurrent(&timeStamp); 
 
     /* Allocate a new image buffer */
-    pImage = this->pNDArrayPool->alloc(ndims, dims, NDFloat32, totalBytes, NULL); 
+    pImage = this->pNDArrayPool->alloc(ndims, dims, NDFloat64, totalBytes, NULL); 
     memcpy(pImage->pData,  pData->values, totalBytes); 
     pImage->ndims = ndims; 
     pImage->dims[0].size = dims[0]; 
@@ -475,14 +475,14 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
     status = (asynStatus) setDoubleParam(addr, function, value);
 
     if (function == ADAcquireTime) {
-        pDetector->setExposureTime(value * 1e+9); 
-        status |= setDoubleParam(ADAcquireTime,    pDetector->setExposureTime(-1)/1e+9);
+        pDetector->setExposureTime(value, true); 
+        status |= setDoubleParam(ADAcquireTime,    pDetector->setExposureTime(-1, true));
     } else if (function == ADAcquirePeriod) {
-        pDetector->setExposurePeriod(value * 1e+9); 
-        status |= setDoubleParam(ADAcquirePeriod,  pDetector->setExposurePeriod(-1)/1e+9); 
+        pDetector->setExposurePeriod(value, true); 
+        status |= setDoubleParam(ADAcquirePeriod,  pDetector->setExposurePeriod(-1, true)); 
     } else if (function == SDDelayTime) {
-        pDetector->setDelayAfterTrigger(value * 1e+9); 
-        status |= setDoubleParam(SDDelayTime,   pDetector->setDelayAfterTrigger(-1)/1e+9); 
+        pDetector->setDelayAfterTrigger(value, true); 
+        status |= setDoubleParam(SDDelayTime,   pDetector->setDelayAfterTrigger(-1, true));
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < NUM_SD_PARAMS) status = ADDriver::writeFloat64(pasynUser, value);
@@ -616,7 +616,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     status |= setIntegerParam(ADSizeY, sizeY);
 
     status |= setIntegerParam(NDArraySize, 0);
-    status |= setIntegerParam(NDDataType,  NDFloat32);
+    status |= setIntegerParam(NDDataType,  NDFloat64);
     
     /* NOTE: these char type waveform record could not be initialized in iocInit 
      * Instead use autosave to restore their values.
