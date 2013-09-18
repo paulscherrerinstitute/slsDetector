@@ -1,6 +1,6 @@
 
 file {
-	name="/afs/psi.ch/user/w/wang_x1/xxx/G/DRV/slsDetector/slsDetectorApp/op/slsDetector.adl"
+	name="/fin/devl/config/medm/slsDetector.adl"
 	version=030105
 }
 display {
@@ -2119,5 +2119,46 @@ text {
 		bclr=4
 	}
 	limits {
+	}
+}
+text {
+	object {
+		x=386
+		y=441
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Acquire Mode"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=586
+		y=442
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ImageMode_RBV"
+		clr=54
+		bclr=4
+	}
+	limits {
+	}
+}
+menu {
+	object {
+		x=520
+		y=442
+		width=61
+		height=20
+	}
+	control {
+		chan="$(P)$(R)ImageMode"
+		clr=14
+		bclr=51
 	}
 }
