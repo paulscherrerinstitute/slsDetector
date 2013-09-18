@@ -19,6 +19,7 @@
 
 #include "slsDetectorUsers.h"
 #include "detectorData.h"
+#include "slsReceiverUsers.h"
 
 #include <epicsExport.h>
 
@@ -51,7 +52,7 @@ static const char *driverName = "slsDetectorDriver";
 /** Driver for sls array detectors using over TCP/IP socket */
 class slsDetectorDriver : public ADDriver {
 public:
-    slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, 
+    slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, int useReceiver,
                     int maxBuffers, size_t maxMemory,
                     int priority, int stackSize);
 
@@ -63,6 +64,7 @@ public:
     virtual void report(FILE *fp, int details); 
 
     void dataCallback(detectorData *pData); /* This should be private but is called from C so must be public */
+    void receiverTask();
     void pollTask(); 
     void acquisitionTask(); 
     void shutdown(); 
@@ -96,6 +98,7 @@ public:
 
     /* Our data */
     slsDetectorUsers *pDetector; 
+    slsReceiverUsers *pReceiver;
     epicsEventId startEventId;
 };
 
@@ -106,15 +109,71 @@ static void c_shutdown(void* arg) {
     p->shutdown(); 
 }
 
-int dataCallbackC(detectorData *pData, int n, void *pArg) 
+int receiverStartCallbackC(char*filepath, char*filename, int fileindex, int datasize, void*pArg)
 {
-    if (pData == NULL)
-       return 0; 
-  
+    return 0;
+}
+
+void receiverDataCallbackC(int framenum, char*datapointer, int datasize, FILE*file, char *gui, void*pArg)
+{
+    /* pData needs to be massaged to detectorData object */
+    int onebuffersize = 1286;
+    int bufferSize = 1286 * 2;
+    int index = 0;
+    int index2 = 0;
+    int onedatasize = 1280;
+    short* retval  = new short[bufferSize/sizeof(short)];   
+    short* origVal = new short[bufferSize/sizeof(short)];
+    double* pVals = new double[onedatasize];
+
+    memcpy(origVal,datapointer,bufferSize);
+    index=(uint32_t)(*(uint32_t*)datapointer); //This index is the same as the framenum. Just in case you want to know
+    index2= (uint32_t)(*((uint32_t*)((char*)(datapointer+onebuffersize)))); //This is the index of the second packet in the frame.
+
+    //1 odd, 1 even
+    if (index%2 != index2%2) {
+        //ideal situation (should be odd, even(index+1))
+        if(index%2){
+            memcpy(retval,((char*) origVal)+4, onedatasize);
+            memcpy((((char*)retval)+onedatasize), ((char*) origVal)+10+onedatasize, onedatasize);
+        }
+
+        //swap to even,odd
+        if(index2%2){
+            memcpy((((char*)retval)+onedatasize),((char*) origVal)+4, onedatasize);
+            memcpy(retval, ((char*) origVal)+10+onedatasize, onedatasize);
+            index=index2;
+        }
+    }else
+        printf("same type: index = %d, tindex2 = %d\n", index, index2);
+
+    for (int i=0; i < onedatasize; i++) {
+        pVals[i] = retval[i];
+    }
+    detectorData *pData = new detectorData(pVals, NULL, NULL, index, "test", onedatasize, 1);
+
     if (pArg  != NULL) {
         slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg; 
         pDetector->dataCallback(pData); 
     }
+    
+    delete[] origVal;
+    delete[] retval;
+    delete pData;
+
+    return; 
+}
+
+int dataCallbackC(detectorData *pData, int n, void *pArg) 
+{
+    if (pData == NULL)
+       return 0; 
+ 
+    if (pArg  != NULL) {
+        slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg; 
+        pDetector->dataCallback(pData); 
+    }
+
     return 0; 
 }
 
@@ -130,10 +189,25 @@ void pollTaskC(void *drvPvt)
     pDetector->pollTask(); 
 }
 
+void receiverTaskC(void *drvPvt)
+{
+    slsDetectorDriver *pDetector = (slsDetectorDriver*)drvPvt; 
+    pDetector->receiverTask();
+}
+
 void slsDetectorDriver::shutdown()
 {
     if (pDetector)
         delete pDetector; 
+    if (pReceiver)
+        delete pReceiver;
+}
+
+void slsDetectorDriver::receiverTask()
+{
+    pReceiver->registerCallBackStartAcquisition(receiverStartCallbackC, NULL);
+    pReceiver->registerCallBackRawDataReady(receiverDataCallbackC, this);
+    pReceiver->start();
 }
 
 void slsDetectorDriver::pollTask()
@@ -163,6 +237,7 @@ void slsDetectorDriver::acquisitionTask()
 {
     int status = asynSuccess; 
     int acquire; 
+    int imageMode;
     char filePath[MAX_FILENAME_LEN];
     char fileName[MAX_FILENAME_LEN];
     int  fileNumber; 
@@ -207,8 +282,11 @@ void slsDetectorDriver::acquisitionTask()
         epicsSnprintf(fullFileName, MAX_FILENAME_LEN, "%s%s_%d", filePath, fileName, fileNumber-1);
         setStringParam(NDFullFileName, fullFileName); 
 
-        setIntegerParam(ADAcquire,  0); 
-        callParamCallbacks(); 
+        getIntegerParam(ADImageMode, &imageMode);
+        if (imageMode == ADImageSingle || imageMode == ADImageMultiple) {
+            setIntegerParam(ADAcquire,  0); 
+            callParamCallbacks(); 
+        }
     }
 }
 
@@ -221,6 +299,7 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     int imageCounter;
     int arrayCallbacks;
     epicsTimeStamp timeStamp; 
+    epicsInt32 colorMode = NDColorModeMono;
 
     if (pData == NULL || pData->values == NULL || pData->npoints <= 0) return; 
 
@@ -237,6 +316,7 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     /* Allocate a new image buffer */
     pImage = this->pNDArrayPool->alloc(ndims, dims, NDFloat64, totalBytes, NULL); 
     memcpy(pImage->pData,  pData->values, totalBytes); 
+    pImage->dataType = NDFloat64;
     pImage->ndims = ndims; 
     pImage->dims[0].size = dims[0]; 
     pImage->dims[0].offset = 0; 
@@ -244,6 +324,8 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     pImage->dims[1].size = dims[1]; 
     pImage->dims[1].offset = 0; 
     pImage->dims[1].binning = 1; 
+
+    pImage->pAttributeList->add("ColorMode", "Color Mode", NDAttrInt32, &colorMode);
 
     /* Increase image counter */
     getIntegerParam(NDArrayCounter, &imageCounter);
@@ -342,6 +424,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     int status = asynSuccess;
     char filePath[MAX_FILENAME_LEN];
     int minX=0, minY=0, sizeX=1, sizeY=1;  
+    static int threshold = -1;
     int retVal; 
     static const char *functionName = "writeInt32";
 
@@ -372,9 +455,16 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == SDSetting) {
         retVal = pDetector->setSettings(value); 
         status |= setIntegerParam(SDSetting, retVal); 
+        /* setSettings override current threshhold, recover it with user's value */
+        if (threshold != -1) {
+            pDetector->setThresholdEnergy(threshold);
+        }
+        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy()); 
     } else if (function == SDThreshold) {
+        /* note down user's set value and recover it when settings change */
+        threshold = value;
         retVal = pDetector->setThresholdEnergy(value); 
-        status |= setIntegerParam(SDThreshold, retVal); 
+        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy()); 
     } else if (function == SDEnergy) {
         retVal = pDetector->setBeamEnergy(value); 
         status |= setIntegerParam(SDEnergy, retVal); 
@@ -524,12 +614,12 @@ void slsDetectorDriver::report(FILE *fp, int details)
     ADDriver::report(fp, details);
 }
 
-extern "C" int slsDetectorConfig(const char *portName, const char *configFileName, int detectorId, 
+extern "C" int slsDetectorConfig(const char *portName, const char *configFileName, int detectorId, int useReceiver,
                                     int maxBuffers, size_t maxMemory,
                                     int priority, int stackSize)
 {
-    new slsDetectorDriver(portName, configFileName, detectorId, maxBuffers, maxMemory,
-                        priority, stackSize);
+    new slsDetectorDriver(portName, configFileName, detectorId, useReceiver,
+            maxBuffers, maxMemory, priority, stackSize);
     return(asynSuccess);
 }
 
@@ -539,7 +629,7 @@ extern "C" int slsDetectorConfig(const char *portName, const char *configFileNam
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] configFileName The configuration file to the detector.
   * \param[in] detectorId The detector index number running on the same system.
-  * \param[in] portName The name of the asyn port driver to be created.
+  * \param[in] useReceiver Launch builtin data receiver.
   * \param[in] maxBuffers The maximum number of NDArray buffers that the NDArrayPool for this driver is 
   *            allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
   * \param[in] maxMemory The maximum amount of memory that the NDArrayPool for this driver is 
@@ -547,17 +637,18 @@ extern "C" int slsDetectorConfig(const char *portName, const char *configFileNam
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   */
-slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, 
+slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFileName, int detectorId, int useReceiver,
                                 int maxBuffers, size_t maxMemory,
                                 int priority, int stackSize)
 
     : ADDriver(portName, 1, NUM_SD_PARAMS, maxBuffers, maxMemory,
                0, 0,             /* No interfaces beyond those set in ADDriver.cpp */
                ASYN_CANBLOCK | ASYN_MULTIDEVICE, 1, /* ASYN_CANBLOCK=1, ASYN_MULTIDEVICE=1, autoConnect=1 */
-               priority, stackSize), pDetector(NULL)
+               priority, stackSize), pDetector(NULL), pReceiver(NULL)
 
 {
     int status = asynSuccess;
+    int recvStatus = 0;
     const char *functionName = "slsDetectorDriver";
 
     /* Create the epicsEvents for signaling to the slsDetector task when acquisition starts and stops */
@@ -589,6 +680,23 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup); 
     createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 
 
+    if (useReceiver == 1) {
+        /* Start slsReceiver */
+        pReceiver = new slsReceiverUsers(0, 0, recvStatus);
+        if (recvStatus == -1) {
+            status = asynError;
+            printf("%s:%s: ERROR: slsReceiver failed\n", 
+                driverName, functionName);
+        } else {
+            /* Create the thread that runs receiver */
+            status = (epicsThreadCreate("receiverTask",
+                                        epicsThreadPriorityMedium,
+                                        epicsThreadGetStackSize(epicsThreadStackMedium),
+                                        (EPICSTHREADFUNC)receiverTaskC,
+                                        this) == NULL);
+        }
+    }
+
     /* Connect to camserver */
     pDetector = new slsDetectorUsers(detectorId); 
     if (pDetector->readConfigurationFile(configFileName) != 0) {
@@ -617,7 +725,9 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     status |= setIntegerParam(NDArraySize, 0);
     status |= setIntegerParam(NDDataType,  NDFloat64);
-    
+
+    status |= setIntegerParam(ADImageMode, ADImageSingle);
+
     /* NOTE: these char type waveform record could not be initialized in iocInit 
      * Instead use autosave to restore their values.
      * It is left here only for references.
@@ -638,7 +748,9 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     }
 
     /* Register data callback function */
-    pDetector->registerDataCallback(dataCallbackC,  (void *)this); 
+    if (useReceiver == 0) {
+        pDetector->registerDataCallback(dataCallbackC,  (void *)this);
+    }
    
     /* Register the shutdown function for epicsAtExit */
     epicsAtExit(c_shutdown, (void*)this); 
@@ -662,22 +774,24 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 static const iocshArg slsDetectorConfigArg0 = {"Port name", iocshArgString};
 static const iocshArg slsDetectorConfigArg1 = {"config file name", iocshArgString};
 static const iocshArg slsDetectorConfigArg2 = {"detector index", iocshArgInt}; 
-static const iocshArg slsDetectorConfigArg3 = {"maxBuffers", iocshArgInt};
-static const iocshArg slsDetectorConfigArg4 = {"maxMemory", iocshArgInt};
-static const iocshArg slsDetectorConfigArg5 = {"priority", iocshArgInt};
-static const iocshArg slsDetectorConfigArg6 = {"stackSize", iocshArgInt};
+static const iocshArg slsDetectorConfigArg3 = {"use receiver builtin", iocshArgInt}; 
+static const iocshArg slsDetectorConfigArg4 = {"maxBuffers", iocshArgInt};
+static const iocshArg slsDetectorConfigArg5 = {"maxMemory", iocshArgInt};
+static const iocshArg slsDetectorConfigArg6 = {"priority", iocshArgInt};
+static const iocshArg slsDetectorConfigArg7 = {"stackSize", iocshArgInt};
 static const iocshArg * const slsDetectorConfigArgs[] =  {&slsDetectorConfigArg0,
                                                               &slsDetectorConfigArg1,
                                                               &slsDetectorConfigArg2,
                                                               &slsDetectorConfigArg3,
                                                               &slsDetectorConfigArg4,
                                                               &slsDetectorConfigArg5, 
-                                                              &slsDetectorConfigArg6};
-static const iocshFuncDef configSlsDetector = {"slsDetectorConfig", 7, slsDetectorConfigArgs};
+                                                              &slsDetectorConfigArg6,
+                                                              &slsDetectorConfigArg7};
+static const iocshFuncDef configSlsDetector = {"slsDetectorConfig", 8, slsDetectorConfigArgs};
 static void configSlsDetectorCallFunc(const iocshArgBuf *args)
 {
-    slsDetectorConfig(args[0].sval, args[1].sval, args[2].ival, 
-            args[3].ival, args[4].ival, args[5].ival,  args[6].ival);
+    slsDetectorConfig(args[0].sval, args[1].sval, args[2].ival, args[3].ival, 
+            args[4].ival, args[5].ival,  args[6].ival, args[7].ival);
 }
 
 
