@@ -1,5 +1,5 @@
 # $Source: /cvs/G/DRV/slsDetector/slsDetectorApp/Db/slsDetector.template,v $
-# $Revision: 1.4 $    $Date: 2013/07/19 09:49:08 $
+# $Revision: 1.5 $    $Date: 2013/09/24 07:31:41 $
 #================================================
 # template for slsDetector driver
 
@@ -19,9 +19,9 @@ record(mbbi, "$(P)$(R)DetectorState_RBV")
     field (ONSV, "MAJOR")
     field (TWST, "waiting")
     field (TWVL, "2")
-    field (TWST, "MINOR")
+    field (TWSV, "MINOR")
     field (THST, "finished")
-    field (THST, "3")
+    field (THVL, "3")
     field (THSV, "MINOR")
     field (FRST, "data")
     field (FRVL, "4")
