@@ -222,10 +222,10 @@ void slsDetectorDriver::pollTask()
         this->unlock(); 
         if (!acquire) continue; 
 
-        int detStatus = pDetector->getDetectorStatus();
-        int fileIndex = pDetector->getFileIndex(); 
         /* Update detector status */
         this->lock(); 
+        int detStatus = pDetector->getDetectorStatus();
+        int fileIndex = pDetector->getFileIndex(); 
         setIntegerParam(ADStatus, detStatus);
         setIntegerParam(NDFileNumber, fileIndex); 
         callParamCallbacks(); 
