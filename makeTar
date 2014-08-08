@@ -1,1 +1,1 @@
-tar cvzf slsDetector.tgz --exclude CVS --exclude psiBuild --exclude slsDetector.tgz --exclude 'O.*' -C .. slsDetector
+tar cvzf slsDetector.tgz --exclude CVS --exclude psiBuild --exclude *.tgz --exclude 'O.*' -C .. slsDetector
