@@ -216,11 +216,6 @@ void slsDetectorDriver::pollTask()
     /* Poll detector running status every second*/
     while (1) {
         epicsThreadSleep(1); 
-        /* Update only if acquiring */
-        this->lock(); 
-        getIntegerParam(ADAcquire, &acquire);
-        this->unlock(); 
-        if (!acquire) continue; 
 
         /* Update detector status */
         this->lock(); 
@@ -371,6 +366,14 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
     int status = asynSuccess;
     const char *functionName = "writeOctet";
 
+    /* Reject any call to the detector if it is running */
+    int runStatus = pDetector->getDetectorStatus(); 
+    if (runStatus == 2 || runStatus == 4 || runStatus == 5) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+        "%s:%s: detector is busy\n", driverName, functionName);
+        return asynError;
+    }
+
     /* Set the parameter in the parameter library. */
     status |= (asynStatus)setStringParam(function, (char *)value);
 
@@ -428,7 +431,16 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     int retVal; 
     static const char *functionName = "writeInt32";
 
-    /* Set the parameter and readback in the parameter library.  This may be overwritten when we read back the
+    /* Reject any call to the detector if it is running */
+    int runStatus = pDetector->getDetectorStatus(); 
+    if (function != ADAcquire and (runStatus == 2 || runStatus == 4 || runStatus == 5)) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+        "%s:%s: detector is busy\n", driverName, functionName);
+        return asynError;
+    }
+
+    /* Set the parameter and readback in the parameter library.
+     * This may be overwritten when we read back the
      * status at the end, but that's OK */
     status |= setIntegerParam(function, value);
 
@@ -511,16 +523,18 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
             status |= asynError; 
         setIntegerParam(SDSaveSetup, 0); 
     } else if (function == ADAcquire) {
-        int runStatus = pDetector->getDetectorStatus(); 
         if (value) {
-            if (runStatus != 0  && runStatus  !=  3)
+            int runStatus = pDetector->getDetectorStatus(); 
+            if (runStatus != 0  && runStatus  !=  3) {
                 /* Detector not ready */
                 setIntegerParam(ADAcquire, 0); 
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s:Acquire: detector not ready status=%d\n", driverName, functionName, runStatus);
+            }
             else
                 /* Send an event to wake up the acquisition task.  */
                 epicsEventSignal(this->startEventId);
-        }
-        if (!value)
+        } else
             /* Stop measurement */
             pDetector->stopMeasurement(); 
     } else if (function ==  NDAutoSave) {
@@ -561,6 +575,15 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
 
     status = getAddress(pasynUser, &addr); 
     if (status != asynSuccess) return((asynStatus)status);
+
+    /* Reject any call to the detector if it is running */
+    int runStatus = pDetector->getDetectorStatus(); 
+    if (runStatus == 2 || runStatus == 4 || runStatus == 5) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+        "%s:%s: detector is busy\n", driverName, functionName);
+        return asynError;
+    }
+
     /* Set the parameter in the parameter library. */
     status = (asynStatus) setDoubleParam(addr, function, value);
 
