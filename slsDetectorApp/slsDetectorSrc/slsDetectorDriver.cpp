@@ -19,7 +19,6 @@
 
 #include "slsDetectorUsers.h"
 #include "detectorData.h"
-#include "slsReceiverUsers.h"
 
 #include <epicsExport.h>
 
@@ -64,7 +63,6 @@ public:
     virtual void report(FILE *fp, int details); 
 
     void dataCallback(detectorData *pData); /* This should be private but is called from C so must be public */
-    void receiverTask();
     void pollTask(); 
     void acquisitionTask(); 
     void shutdown(); 
@@ -98,7 +96,6 @@ public:
 
     /* Our data */
     slsDetectorUsers *pDetector; 
-    slsReceiverUsers *pReceiver;
     epicsEventId startEventId;
 };
 
@@ -107,61 +104,6 @@ public:
 static void c_shutdown(void* arg) {
     slsDetectorDriver *p = (slsDetectorDriver*)arg;
     p->shutdown(); 
-}
-
-int receiverStartCallbackC(char*filepath, char*filename, int fileindex, int datasize, void*pArg)
-{
-    return 0;
-}
-
-void receiverDataCallbackC(int framenum, char*datapointer, int datasize, FILE*file, char *gui, void*pArg)
-{
-    /* pData needs to be massaged to detectorData object */
-    int onebuffersize = 1286;
-    int bufferSize = 1286 * 2;
-    int index = 0;
-    int index2 = 0;
-    int onedatasize = 1280;
-    short* retval  = new short[bufferSize/sizeof(short)];   
-    short* origVal = new short[bufferSize/sizeof(short)];
-    double* pVals = new double[onedatasize];
-
-    memcpy(origVal,datapointer,bufferSize);
-    index=(uint32_t)(*(uint32_t*)datapointer); //This index is the same as the framenum. Just in case you want to know
-    index2= (uint32_t)(*((uint32_t*)((char*)(datapointer+onebuffersize)))); //This is the index of the second packet in the frame.
-
-    //1 odd, 1 even
-    if (index%2 != index2%2) {
-        //ideal situation (should be odd, even(index+1))
-        if(index%2){
-            memcpy(retval,((char*) origVal)+4, onedatasize);
-            memcpy((((char*)retval)+onedatasize), ((char*) origVal)+10+onedatasize, onedatasize);
-        }
-
-        //swap to even,odd
-        if(index2%2){
-            memcpy((((char*)retval)+onedatasize),((char*) origVal)+4, onedatasize);
-            memcpy(retval, ((char*) origVal)+10+onedatasize, onedatasize);
-            index=index2;
-        }
-    }else
-        printf("same type: index = %d, tindex2 = %d\n", index, index2);
-
-    for (int i=0; i < onedatasize; i++) {
-        pVals[i] = retval[i];
-    }
-    detectorData *pData = new detectorData(pVals, NULL, NULL, index, "test", onedatasize, 1);
-
-    if (pArg  != NULL) {
-        slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg; 
-        pDetector->dataCallback(pData); 
-    }
-    
-    delete[] origVal;
-    delete[] retval;
-    delete pData;
-
-    return; 
 }
 
 int dataCallbackC(detectorData *pData, int n, void *pArg) 
@@ -189,25 +131,10 @@ void pollTaskC(void *drvPvt)
     pDetector->pollTask(); 
 }
 
-void receiverTaskC(void *drvPvt)
-{
-    slsDetectorDriver *pDetector = (slsDetectorDriver*)drvPvt; 
-    pDetector->receiverTask();
-}
-
 void slsDetectorDriver::shutdown()
 {
     if (pDetector)
         delete pDetector; 
-    if (pReceiver)
-        delete pReceiver;
-}
-
-void slsDetectorDriver::receiverTask()
-{
-    pReceiver->registerCallBackStartAcquisition(receiverStartCallbackC, NULL);
-    pReceiver->registerCallBackRawDataReady(receiverDataCallbackC, this);
-    pReceiver->start();
 }
 
 void slsDetectorDriver::pollTask()
@@ -667,7 +594,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     : ADDriver(portName, 1, NUM_SD_PARAMS, maxBuffers, maxMemory,
                0, 0,             /* No interfaces beyond those set in ADDriver.cpp */
                ASYN_CANBLOCK | ASYN_MULTIDEVICE, 1, /* ASYN_CANBLOCK=1, ASYN_MULTIDEVICE=1, autoConnect=1 */
-               priority, stackSize), pDetector(NULL), pReceiver(NULL)
+               priority, stackSize), pDetector(NULL)
 
 {
     int status = asynSuccess;
@@ -704,20 +631,6 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 
 
     if (useReceiver == 1) {
-        /* Start slsReceiver */
-        pReceiver = new slsReceiverUsers(0, 0, recvStatus);
-        if (recvStatus == -1) {
-            status = asynError;
-            printf("%s:%s: ERROR: slsReceiver failed\n", 
-                driverName, functionName);
-        } else {
-            /* Create the thread that runs receiver */
-            status = (epicsThreadCreate("receiverTask",
-                                        epicsThreadPriorityMedium,
-                                        epicsThreadGetStackSize(epicsThreadStackMedium),
-                                        (EPICSTHREADFUNC)receiverTaskC,
-                                        this) == NULL);
-        }
     }
 
     /* Connect to camserver */
@@ -771,10 +684,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     }
 
     /* Register data callback function */
-    if (useReceiver == 0) {
-        pDetector->registerDataCallback(dataCallbackC,  (void *)this);
-    }
-   
+    pDetector->registerDataCallback(dataCallbackC,  (void *)this);
+
     /* Register the shutdown function for epicsAtExit */
     epicsAtExit(c_shutdown, (void*)this); 
 
