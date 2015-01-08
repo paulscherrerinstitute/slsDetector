@@ -68,17 +68,19 @@ Configuration
     #               portName,       # The name of the asyn port driver to be created.
     #               configFileName, # The configuration file to the detector.
     #               detectorId,     # The detector index number running on the same system.
-    #               useReceiver,    # Wether to use builtin receiver. Set this to 1 to launch builtin receiver.
-    #                                 Only valid for detectors GOTTHARD, JUNGFRAU, EIGER.
     #               maxBuffers,     # The maximum number of NDArray buffers that the NDArrayPool for this driver is 
     #                                 allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
     #               maxMemory)      # The maximum amount of memory that the NDArrayPool for this driver is 
     #                                 allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
-    slsDetectorConfig("SD1", "cfg/mcs1x21.config", 0, 0, -1, -1)
+    slsDetectorConfig("SD1", "cfg/mcs1x21.config", 0, -1, -1)
 
 
 Release Notes
 -------------
+
+* 1.2 - 08.08.2014
+  
+  1. libSlsDetector updated.
 
 * 1.1 - 10.12.2013
 
