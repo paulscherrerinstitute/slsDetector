@@ -81,8 +81,10 @@ Release Notes
 -------------
 
 * 1.1 - 10.12.2013
+
   1. libSlsDetector updated to r706.
   2. Avoid calling getDetectorStatus from two threads simultaneously.
 
 * 1.0 - 18.09.2013
+
   1. Milestone release. It has been tested for MYTHEN and GOTTHARD detectors.detectors
