@@ -8,31 +8,31 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-SUPPORT=/home/scratch/synApps_5_6/support
+SUPPORT=/home/scratch/synApps_5_7/support
 -include $(TOP)/../configure/SUPPORT.$(EPICS_HOST_ARCH)
 
 # ASYN is needed for sockets and for smartControl
 ASYN=$(SUPPORT)/asyn-4-21
 
 # CALC is needed for scalcout record that SSCAN uses
-CALC=$(SUPPORT)/calc-2-9
+CALC=$(SUPPORT)/calc-3-2
 
 # BUSY is needed for busy record
-BUSY=$(SUPPORT)/busy-1-4
+BUSY=$(SUPPORT)/busy-1-6
 
 # SSCAN is needed for scanning threshold on Pilatus
-SSCAN=$(SUPPORT)/sscan-2-8-1
+SSCAN=$(SUPPORT)/sscan-2-9
 
 # MCA is needed for fast accumulation of ROI counts
-MCA=$(SUPPORT)/mca-7-2
+MCA=$(SUPPORT)/mca-7-4
 
 #AUTOSAVE is needed for save_restore
-AUTOSAVE=$(SUPPORT)/autosave-5-0
+AUTOSAVE=$(SUPPORT)/autosave-5-1
 
 # AREA_DETECTOR is needed for base and plugins
 AREA_DETECTOR=$(SUPPORT)/areaDetector-1-9-1
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/home/scratch/base-3.14.12.2
+EPICS_BASE=/home/scratch/base-3.14.12.4
 -include $(TOP)/../configure/EPICS_BASE.$(EPICS_HOST_ARCH)
 
