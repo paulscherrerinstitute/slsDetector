@@ -77,17 +77,12 @@ Configuration
     slsDetectorConfig("SD1", "cfg/mcs1x21.config", 0, 0, -1, -1)
 
 
-MEDM
-----
-
-.. image:: slsDetectorMedmPanel.png 
-
 Release Notes
 -------------
 
 * 1.1 - 10.12.2013
-  #. libSlsDetector updated to r706.
-  #. Avoid calling getDetectorStatus from two threads simultaneously.
+  1. libSlsDetector updated to r706.
+  2. Avoid calling getDetectorStatus from two threads simultaneously.
 
 * 1.0 - 18.09.2013
-  #. Milestone release. It has been tested for MYTHEN and GOTTHARD detectors.detectors
+  1. Milestone release. It has been tested for MYTHEN and GOTTHARD detectors.detectors
