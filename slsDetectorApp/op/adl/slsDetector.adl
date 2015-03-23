@@ -1,6 +1,6 @@
 
 file {
-	name="/afs/psi.ch/user/w/wang_x1/xxx/G/DRV/slsDetector/slsDetectorApp/op/slsDetector.adl"
+	name="/work/sls/config/medm/slsDetector.adl"
 	version=030105
 }
 display {
@@ -1616,6 +1616,7 @@ text {
 		clr=54
 		bclr=4
 	}
+	clrmod="alarm"
 	align="horiz. centered"
 	limits {
 	}
