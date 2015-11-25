@@ -106,7 +106,7 @@ static void c_shutdown(void* arg) {
     p->shutdown(); 
 }
 
-int dataCallbackC(detectorData *pData, int n, void *pArg) 
+int dataCallbackC(detectorData *pData, int n, int s, void *pArg) 
 {
     if (pData == NULL)
        return 0; 
@@ -139,7 +139,6 @@ void slsDetectorDriver::shutdown()
 
 void slsDetectorDriver::pollTask()
 {
-    int acquire; 
     /* Poll detector running status every second*/
     while (1) {
         epicsThreadSleep(1); 
@@ -597,7 +596,6 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
 {
     int status = asynSuccess;
-    int recvStatus = 0;
     const char *functionName = "slsDetectorDriver";
 
     /* Create the epicsEvents for signaling to the slsDetector task when acquisition starts and stops */

@@ -15,7 +15,7 @@
 
 class detectorData;
 class multiSlsDetector;
-
+class multiSlsDetectorCommand;
 
 
 #include <stdint.h>
@@ -54,9 +54,12 @@ More advanced configuration functions are not implemented and can be written in 
 
 slsReceiverUsers is a class to receive the data for detectors with external data receiver (e.g. GOTTHARD). Callbacks can be registered to process the data or save them in specific formats.
 
-detectorData is a structure containing the data and additional information which is used to return the data e.g. to the  GUi for displaying them.
+detectorData is a structure containing the data and additional information which is used to return the data e.g. to the  GUI for displaying them.
 
  
+You can  find examples of how this classes can be instatiated in mainClient.cpp and mainReceiver.cpp
+
+
    \authors <a href="mailto:anna.bergamaschi@psi.ch">Anna Bergamaschi</a>, <a href="mailto:dhanya.maliakal@psi.ch">Dhanya Maliakal</a>
    @version 0.2
 <H2>Currently supported detectors</H2>
@@ -405,10 +408,10 @@ class slsDetectorUsers
 
   /**
      @short register calbback for accessing detector final data
-     \param userCallback function for plotting/analyzing the data. Its arguments are  the data structure d and the frame number f.
+     \param userCallback function for plotting/analyzing the data. Its arguments are  the data structure d and the frame number f, s is for subframe number for eiger for 32 bit mode
   */
 
-   void registerDataCallback(int( *userCallback)(detectorData* d, int f, void*), void *pArg);
+   void registerDataCallback(int( *userCallback)(detectorData* d, int f, int s, void*), void *pArg);
 
   /**
      @short register callback for accessing raw data - if the rawDataCallback is registered, no filewriting/postprocessing will be carried on automatically by the software - the raw data are deleted by the software
@@ -447,7 +450,42 @@ class slsDetectorUsers
   
   virtual void finalizeDataset(double *a, double *v, double *e, int &np); 
 
+  /**
+     get get Module Firmware Version
+     \returns id
+  */
+  int64_t getModuleFirmwareVersion();
 
+  /**
+     get get Module Serial Number
+     @param imod module number
+     \returns id
+  */
+  int64_t getModuleSerialNumber(int imod=-1);
+
+  /**
+     get get Detector Firmware Version
+     \returns id
+  */
+  int64_t getDetectorFirmwareVersion();
+
+  /**
+     get get Detector Serial Number
+     \returns id
+  */
+  int64_t getDetectorSerialNumber();
+
+  /**
+     get get Detector Software Version
+     \returns id
+  */
+  int64_t getDetectorSoftwareVersion();
+
+  /**
+     get this Software Version
+     \returns id
+  */
+  int64_t getThisSoftwareVersion();
 
   /**
      @short register calbback for accessing detector final data
@@ -487,7 +525,25 @@ class slsDetectorUsers
      \param func function for reading the I0 (called with parameter 0 before the acquisition, 1 after and the return value used as I0)
   */
    void registerGetI0Callback( double (*func)(int,void*),void *arg);
-  
+
+   /**
+     @short sets parameters in command interface http://www.psi.ch/detectors/UsersSupportEN/slsDetectorClientHowTo.pdf
+     \param narg value to be set
+     \param args value to be set
+     \param pos position of detector in multislsdetector list
+     \returns answer string
+    */
+   string putCommand(int narg, char *args[], int pos=-1);
+
+   /**
+     @short gets parameters in command interface http://www.psi.ch/detectors/UsersSupportEN/slsDetectorClientHowTo.pdf
+     \param narg value to be set
+     \param args value to be set
+     \param pos position of detector in multislsdetector list
+     \returns answer string
+    */
+   string getCommand(int narg, char *args[], int pos=-1);
+
   /************************************************************************
 
                            STATIC FUNCTIONS
@@ -576,7 +632,7 @@ class slsDetectorUsers
 
  private:
   multiSlsDetector *myDetector;
-
+  multiSlsDetectorCommand *myCmd;
  };
 
 #endif
