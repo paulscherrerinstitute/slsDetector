@@ -237,16 +237,8 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
 
     this ->lock(); 
 
-    /* pData should contain the dimension information, but it didn't.
-     * So get from detector size setting */
-    //dims[0] = pData->npoints; 
-    //dims[1] = pData->npy; 
-    int nx, ny;
-    getIntegerParam(ADSizeX, &nx);
-    getIntegerParam(ADSizeY, &ny);
-    dims[0] = nx; 
-    dims[1] = ny; 
-
+    dims[0] = pData->npoints; 
+    dims[1] = pData->npy; 
     totalBytes = dims[0]*dims[1]*8; 
     if (dims[1] == 1) ndims = 1; 
 
