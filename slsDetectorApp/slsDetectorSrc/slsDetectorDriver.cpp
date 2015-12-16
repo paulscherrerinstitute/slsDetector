@@ -106,6 +106,12 @@ static void c_shutdown(void* arg) {
     p->shutdown(); 
 }
 
+/* Dummy implementation */
+int dummyFinishedCallbackC(double progress, int status, void *pArg)
+{
+    return 0;
+}
+
 int dataCallbackC(detectorData *pData, int n, int s, void *pArg) 
 {
     if (pData == NULL)
@@ -692,6 +698,10 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     /* Register data callback function */
     pDetector->registerDataCallback(dataCallbackC,  (void *)this);
+    /* Register acquisition finsihed callback function 
+     * A dummy callback is used only to trick slsDetector library to send us every nth frame 
+     * */
+    pDetector->registerAcquisitionFinishedCallback(dummyFinishedCallbackC,  (void *)this);
 
     /* Register the shutdown function for epicsAtExit */
     epicsAtExit(c_shutdown, (void*)this); 
