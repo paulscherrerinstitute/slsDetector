@@ -139,17 +139,22 @@ void slsDetectorDriver::shutdown()
 
 void slsDetectorDriver::pollTask()
 {
+    int acquire;
     /* Poll detector running status every second*/
     while (1) {
         epicsThreadSleep(1); 
 
         /* Update detector status */
         this->lock(); 
-        int detStatus = pDetector->getDetectorStatus();
-        int fileIndex = pDetector->getFileIndex(); 
-        setIntegerParam(ADStatus, detStatus);
-        setIntegerParam(NDFileNumber, fileIndex); 
-        callParamCallbacks(); 
+        /* Is acquisition active? */
+        getIntegerParam(ADAcquire, &acquire);
+        if (acquire) {
+            int detStatus = pDetector->getDetectorStatus();
+            int fileIndex = pDetector->getFileIndex();
+            setIntegerParam(ADStatus, detStatus);
+            setIntegerParam(NDFileNumber, fileIndex);
+            callParamCallbacks();
+        }
         this->unlock(); 
     }
 }
@@ -226,8 +231,16 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
 
     this ->lock(); 
 
-    dims[0] = pData->npoints; 
-    dims[1] = pData->npy; 
+    /* pData should contain the dimension information, but it didn't.
+     * So get from detector size setting */
+    //dims[0] = pData->npoints; 
+    //dims[1] = pData->npy; 
+    int nx, ny;
+    getIntegerParam(ADSizeX, &nx);
+    getIntegerParam(ADSizeY, &ny);
+    dims[0] = nx; 
+    dims[1] = ny; 
+
     totalBytes = dims[0]*dims[1]*8; 
     if (dims[1] == 1) ndims = 1; 
 
