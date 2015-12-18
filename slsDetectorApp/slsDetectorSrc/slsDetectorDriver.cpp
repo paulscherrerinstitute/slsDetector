@@ -156,9 +156,7 @@ void slsDetectorDriver::pollTask()
         getIntegerParam(ADAcquire, &acquire);
         if (acquire) {
             int detStatus = pDetector->getDetectorStatus();
-            int fileIndex = pDetector->getFileIndex();
             setIntegerParam(ADStatus, detStatus);
-            setIntegerParam(NDFileNumber, fileIndex);
             callParamCallbacks();
         }
         this->unlock(); 
