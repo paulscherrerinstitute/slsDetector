@@ -63,7 +63,6 @@ public:
     virtual void report(FILE *fp, int details); 
 
     void dataCallback(detectorData *pData); /* This should be private but is called from C so must be public */
-    void pollTask(); 
     void acquisitionTask(); 
     void shutdown(); 
  
@@ -131,36 +130,10 @@ void acquisitionTaskC(void *drvPvt)
     pDetector->acquisitionTask(); 
 }
 
-void pollTaskC(void *drvPvt)
-{
-    slsDetectorDriver *pDetector = (slsDetectorDriver*)drvPvt; 
-    pDetector->pollTask(); 
-}
-
 void slsDetectorDriver::shutdown()
 {
     if (pDetector)
         delete pDetector; 
-}
-
-void slsDetectorDriver::pollTask()
-{
-    int acquire;
-    /* Poll detector running status every second*/
-    while (1) {
-        epicsThreadSleep(1); 
-
-        /* Update detector status */
-        this->lock(); 
-        /* Is acquisition active? */
-        getIntegerParam(ADAcquire, &acquire);
-        if (acquire) {
-            int detStatus = pDetector->getDetectorStatus();
-            setIntegerParam(ADStatus, detStatus);
-            callParamCallbacks();
-        }
-        this->unlock(); 
-    }
 }
 
 void slsDetectorDriver::acquisitionTask()
@@ -701,13 +674,6 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
                                 epicsThreadPriorityMedium,
                                 epicsThreadGetStackSize(epicsThreadStackMedium),
                                 (EPICSTHREADFUNC)acquisitionTaskC,
-                                this) == NULL);
-
-    /* Create the thread that polls status */
-    status = (epicsThreadCreate("pollTask",
-                                epicsThreadPriorityMedium,
-                                epicsThreadGetStackSize(epicsThreadStackMedium),
-                                (EPICSTHREADFUNC)pollTaskC,
                                 this) == NULL);
 }
 
