@@ -13,3 +13,7 @@ USR_INCLUDES += -I../../slsDetectorApp/slsDetectorSupport
 USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
 USR_LIBS += SlsDetector pthread
+
+TEMPLATES += ../slsDetectorApp/Db/slsDetector.template
+TEMPLATES += ../slsDetectorApp/Db/slsDetector_settings.req
+
