@@ -11,9 +11,10 @@ $(P)$(R)UsePixelMask
 $(P)$(R)UseAngularConv
 $(P)$(R)BitDepth
 $(P)$(R)TimingMode
-(P)$(R)ReceiverMode
+$(P)$(R)ReceiverMode
 $(P)$(R)DelayTime
 $(P)$(R)NumGates
 $(P)$(R)NumCycles
 $(P)$(R)NumFrames
 $(P)$(R)SetupFile 
+file "ADBase_settings.req", P=$(P), R=$(R)
