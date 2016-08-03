@@ -18,3 +18,4 @@ $(P)$(R)NumCycles
 $(P)$(R)NumFrames
 $(P)$(R)SetupFile 
 file "ADBase_settings.req", P=$(P), R=$(R)
+file "NDFile_settings.req", P=$(P), R=$(R)

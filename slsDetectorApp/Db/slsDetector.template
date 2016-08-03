@@ -2,6 +2,7 @@
 # $Revision: 1.5 $    $Date: 2013/09/24 07:31:41 $
 #================================================
 include "ADBase.template"
+include "NDFile.template"
 
 # template for slsDetector driver
 #----------------------------------
