@@ -275,8 +275,9 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
     const char *functionName = "writeOctet";
 
     /* Reject any call to the detector if it is running */
-    int runStatus = pDetector->getDetectorStatus(); 
-    if (runStatus == 2 || runStatus == 4 || runStatus == 5) {
+    int acquire;
+    getIntegerParam(ADAcquire, &acquire);
+    if (acquire == 1) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
@@ -295,11 +296,15 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
         status |= setStringParam(NDFileName,
                     pDetector->getFileName().c_str()); 
     } else if (function == SDFlatFieldPath) {
-        pDetector->setFlatFieldCorrectionDir(value); 
+        if (value && strlen(value) != 0) {
+            pDetector->setFlatFieldCorrectionDir(value); 
+        }
         status |= setStringParam(SDFlatFieldPath,
                     pDetector->getFlatFieldCorrectionDir().c_str()); 
     } else if (function == SDFlatFieldFile) {
-        pDetector->setFlatFieldCorrectionFile(value); 
+        if (value && strlen(value) != 0) {
+            pDetector->setFlatFieldCorrectionFile(value); 
+        }
         status |= setStringParam(SDFlatFieldPath,
                     pDetector->getFlatFieldCorrectionFile().c_str()); 
     } else {
@@ -340,8 +345,9 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     static const char *functionName = "writeInt32";
 
     /* Reject any call to the detector if it is running */
-    int runStatus = pDetector->getDetectorStatus(); 
-    if (function != ADAcquire and (runStatus == 2 || runStatus == 4 || runStatus == 5)) {
+    int acquire;
+    getIntegerParam(ADAcquire, &acquire);
+    if (function != ADAcquire && acquire == 1) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
@@ -394,8 +400,9 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         retVal = pDetector->setOnline(value); 
         status |= setIntegerParam(SDOnline, retVal); 
     } else if (function == SDUseFlatField) {
-        retVal = pDetector->enableFlatFieldCorrection(value); 
-        status |= setIntegerParam(SDUseFlatField, retVal); 
+        //printf("SDUseFlatField %d\n", value);
+        //retVal = pDetector->enableFlatFieldCorrection(value); 
+        //status |= setIntegerParam(SDUseFlatField, retVal); 
     } else if (function == SDUseCountRate) {
         retVal = pDetector->enableCountRateCorrection(value); 
         status |= setIntegerParam(SDUseCountRate, retVal); 
@@ -485,8 +492,9 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
     if (status != asynSuccess) return((asynStatus)status);
 
     /* Reject any call to the detector if it is running */
-    int runStatus = pDetector->getDetectorStatus(); 
-    if (runStatus == 2 || runStatus == 4 || runStatus == 5) {
+    int acquire;
+    getIntegerParam(ADAcquire, &acquire);
+    if (acquire == 1) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
@@ -649,7 +657,12 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionDir().c_str()); 
     status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionFile().c_str()); 
- 
+
+    status |= setIntegerParam(SDUseFlatField,  pDetector->enableFlatFieldCorrection());
+    status |= setIntegerParam(SDUseCountRate,  pDetector->enableCountRateCorrection());
+    status |= setIntegerParam(SDUsePixelMask,  pDetector->enablePixelMaskCorrection());
+    status |= setIntegerParam(SDUseAngularConv,  pDetector->enableAngularConversion());
+
     status |= setIntegerParam(ADStatus,        pDetector->getDetectorStatus());
 
     callParamCallbacks();
