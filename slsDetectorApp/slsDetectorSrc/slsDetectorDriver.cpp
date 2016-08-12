@@ -400,9 +400,8 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         retVal = pDetector->setOnline(value); 
         status |= setIntegerParam(SDOnline, retVal); 
     } else if (function == SDUseFlatField) {
-        //printf("SDUseFlatField %d\n", value);
-        //retVal = pDetector->enableFlatFieldCorrection(value); 
-        //status |= setIntegerParam(SDUseFlatField, retVal); 
+        retVal = pDetector->enableFlatFieldCorrection(value); 
+        status |= setIntegerParam(SDUseFlatField, retVal); 
     } else if (function == SDUseCountRate) {
         retVal = pDetector->enableCountRateCorrection(value); 
         status |= setIntegerParam(SDUseCountRate, retVal); 
