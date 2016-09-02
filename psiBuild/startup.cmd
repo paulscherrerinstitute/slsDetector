@@ -1,3 +1,5 @@
+set_requestfile_path("$($(MODULE)_DIR)db")
+
 # slsDetectorConfig (
 #               portName,       # The name of the asyn port driver to be created.
 #               configFileName, # The configuration file to the detector.
@@ -6,6 +8,10 @@
 #                                 allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
 #               maxMemory)      # The maximum amount of memory that the NDArrayPool for this driver is 
 #                                 allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
-slsDetectorConfig($(PORT=SD1), $(CONFIG), 0)
-dbLoadRecords("slsDetector.template","P=$(PREFIX),R=$(R=cam1:),PORT=$(PORT=SD1),ADDR=$(ADDR=0),TIMEOUT=1")
-set_requestfile_path("$($(MODULE)_DIR)db")
+slsDetectorConfig("SD$(N=1)", $(CONFIG), $(ID=0))
+dbLoadRecords("slsDetector.template","P=$(PREFIX),R=cam$(N=1):,PORT=SD$(N=1),ADDR=0,TIMEOUT=1")
+
+set_pass0_restoreFile("slsDetector_settings.sav")
+set_pass1_restoreFile("slsDetector_settings.sav")
+
+afterInit create_monitor_set,"slsDetector_settings.req",30,"P=$(PREFIX),R=cam$(N=1):"
