@@ -8,10 +8,10 @@ set_requestfile_path("$($(MODULE)_DIR)db")
 #                                 allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
 #               maxMemory)      # The maximum amount of memory that the NDArrayPool for this driver is 
 #                                 allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
-slsDetectorConfig("SD$(N=1)", $(CONFIG), $(ID=0))
-dbLoadRecords("slsDetector.template","P=$(PREFIX),R=cam$(N=1):,PORT=SD$(N=1),ADDR=0,TIMEOUT=1")
+slsDetectorConfig("$(PORT=SD$(N=1))", $(CONFIG), $(ID=0))
+dbLoadRecords("slsDetector.template","P=$(PREFIX),R=$(RECORD=cam1:),PORT=$(PORT=SD$(N=1)),ADDR=0,TIMEOUT=1")
 
-set_pass0_restoreFile("slsDetector_settings.sav")
-set_pass1_restoreFile("slsDetector_settings.sav")
+set_pass0_restoreFile("slsDetector_settings$(N=1).sav")
+set_pass1_restoreFile("slsDetector_settings$(N=1).sav")
 
-afterInit create_monitor_set,"slsDetector_settings.req",30,"P=$(PREFIX),R=cam$(N=1):"
+afterInit create_monitor_set,"slsDetector_settings.req",30,"P=$(PREFIX),R=$(RECORD=cam1:)","slsDetector_settings$(N=1).sav"
