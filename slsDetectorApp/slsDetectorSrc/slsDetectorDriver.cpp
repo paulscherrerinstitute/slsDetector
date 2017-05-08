@@ -392,10 +392,10 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         retVal = pDetector->setThresholdEnergy(value); 
         status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy()); 
     } else if (function == SDEnergy) {
-        retVal = pDetector->setBeamEnergy(value); 
-        status |= setIntegerParam(SDEnergy, retVal); 
         /* Threshold energy is automatically set to half of the beam energy */
-        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy()); 
+        retVal = pDetector->setThresholdEnergy(value / 2); 
+        status |= setIntegerParam(SDThreshold, retVal);
+        status |= setIntegerParam(SDEnergy, value); 
     } else if (function  == SDOnline) {
         retVal = pDetector->setOnline(value); 
         status |= setIntegerParam(SDOnline, retVal); 

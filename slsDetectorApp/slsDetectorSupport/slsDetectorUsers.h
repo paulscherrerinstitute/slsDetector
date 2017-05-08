@@ -302,19 +302,6 @@ class slsDetectorUsers
   */
    int setThresholdEnergy(int e_eV);
 
-  /**
-     @short get beam energy -- only for dectris!
-    \returns current beam energy
-  */
-   int getBeamEnergy();  
-
-
-  /**
-     @short set beam energy -- only for dectris!
-    \param e_eV beam in eV
-    \returns current beam energyin ev (-1 failed)
-  */
-   int setBeamEnergy(int e_eV);
 
    /**
         @short set/get exposure time value
@@ -449,6 +436,15 @@ class slsDetectorUsers
   */
   
   virtual void finalizeDataset(double *a, double *v, double *e, int &np); 
+
+
+  /**
+   	 Enable data streaming from receiver (zmq)
+   	 \param i 1 to set, 0 to reset and -1 to get
+   	 \returns data streaming enable
+   */
+   int enableDataStreamingFromReceiver(int i=-1);
+
 
   /**
      get get Module Firmware Version
