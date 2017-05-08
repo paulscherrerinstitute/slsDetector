@@ -14,7 +14,7 @@ ARCH=linux-$(word 2,$(subst -, , $(EPICS_HOST_ARCH)))
 USR_INCLUDES += -I../../slsDetectorApp/slsDetectorSupport
 USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
-USR_LIBS += SlsDetector pthread
+USR_LIBS += SlsDetector zmq pthread
 
 TEMPLATES += ../slsDetectorApp/Db/slsDetector.template
 TEMPLATES += ../slsDetectorApp/Db/slsDetector_settings.req
