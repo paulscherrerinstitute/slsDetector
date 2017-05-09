@@ -6,22 +6,13 @@ include $(TOP)/configure/CONFIG
 
 
 LIBRARY_IOC_Linux += slsDetectorDriver
+USR_CXXFLAGS += -D_GLIBCXX_USE_CXX11_ABI=0
 LIB_SRCS += slsDetectorDriver.cpp
 LIB_LIBS += SlsDetector
 
-PROD_IOC_Linux += slsDetectorApp
-
-# <name>.dbd will be created from <name>Include.dbd
-DBD += slsDetectorApp.dbd
 DBD += slsDetectorSupport.dbd
 
-# <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-PROD_SRCS += slsDetectorApp_registerRecordDeviceDriver.cpp slsDetectorAppMain.cpp
-
-# Add locally compiled object code
-PROD_LIBS += slsDetectorDriver SlsDetector 
-
-include $(AREA_DETECTOR)/ADApp/commonDriverMakefile
+include $(ADCORE)/ADApp/commonLibraryMakefile
 
 #=============================
 

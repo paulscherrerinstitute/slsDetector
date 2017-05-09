@@ -1,0 +1,2 @@
+slsDetector=$(TOP)/../..
+ADZMQ=$(AREA_DETECTOR)/ADZMQ
