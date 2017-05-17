@@ -50,6 +50,8 @@ set_requestfile_path(".")
 set_requestfile_path("$(slsDetector)/slsDetectorApp/Db")
 set_requestfile_path("$(ADCORE)/ADApp/Db")
 
+set_savefile_path("./autosave")
+
 iocInit()
 
 # save things every thirty seconds
