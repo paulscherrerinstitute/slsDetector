@@ -306,7 +306,7 @@ record (bi, "$(P)$(R)UseAngularConv_RBV")
     field (SCAN, "I/O Intr")
 }
 #----------------------------------
-# Enable Angular Conversion
+# Bit depth
 #----------------------------------
 record (longout, "$(P)$(R)BitDepth")
 {
