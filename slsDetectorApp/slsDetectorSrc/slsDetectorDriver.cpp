@@ -671,6 +671,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
         return;
     }
 
+    /* Enable data streaming */
+    pDetector->enableDataStreamingFromReceiver(1);
     /* Register data callback function */
     pDetector->registerDataCallback(dataCallbackC,  (void *)this);
     /* Register acquisition finsihed callback function 
