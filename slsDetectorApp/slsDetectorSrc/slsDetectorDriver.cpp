@@ -380,6 +380,10 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         status |= setIntegerParam(NDFileNumber, retVal); 
     } else if (function == SDSetting) {
         retVal = pDetector->setSettings(value); 
+        /* map undefined and uninitialized settings from 200 to 14 */
+	if (retVal >= 200) {
+            retVal -= 186;
+	}
         status |= setIntegerParam(SDSetting, retVal); 
         /* setSettings override current threshhold, recover it with user's value */
         if (threshold != -1) {
