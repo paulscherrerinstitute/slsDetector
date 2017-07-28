@@ -167,7 +167,10 @@ void slsDetectorDriver::acquisitionTask()
         }
 
         /* Start acquisition,  this is a blocking function */
-        this->unlock(); 
+        this->unlock();
+        if (pDetector->enableDataStreamingFromReceiver(-1) == 0 && pDetector->enableDataStreamingFromReceiver(1) == 0)
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: no data streaming is available\n", driverName, functionName);
         pDetector->startMeasurement();
         this->lock(); 
 
@@ -676,7 +679,9 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     }
 
     /* Enable data streaming */
-    pDetector->enableDataStreamingFromReceiver(1);
+    if (pDetector->enableDataStreamingFromReceiver(-1) == 0 && pDetector->enableDataStreamingFromReceiver(1) == 0)
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+        "%s:%s: no data streaming is available\n", driverName, functionName);
     /* Register data callback function */
     pDetector->registerDataCallback(dataCallbackC,  (void *)this);
     /* Register acquisition finsihed callback function 
