@@ -37,6 +37,7 @@ static const char *driverName = "slsDetectorDriver";
 #define SDUseCountRateString    "SD_USE_COUNTRATE"
 #define SDUsePixelMaskString    "SD_USE_PIXELMASK"
 #define SDUseAngularConvString  "SD_USE_ANGULAR_CONV"
+#define SDUseDataCallbackString "SD_USE_DATA_CALLBACK"
 #define SDBitDepthString        "SD_BIT_DEPTH"
 #define SDNumGatesString        "SD_NUM_GATES"
 #define SDNumCyclesString       "SD_NUM_CYCLES"
@@ -79,6 +80,7 @@ public:
     int SDUseCountRate;
     int SDUsePixelMask;
     int SDUseAngularConv;
+    int SDUseDataCallback;
     int SDBitDepth; 
     int SDNumGates; 
     int SDNumCycles; 
@@ -206,6 +208,7 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     int arrayCallbacks;
     epicsTimeStamp timeStamp; 
     epicsInt32 colorMode = NDColorModeMono;
+    const char *functionName = "dataCallback";
 
     if (pData == NULL || pData->values == NULL || pData->npoints <= 0) return; 
 
@@ -418,6 +421,11 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == SDUseAngularConv) {
         retVal = pDetector->enableAngularConversion(value); 
         status |= setIntegerParam(SDUseAngularConv,retVal); 
+    } else if (function == SDUseDataCallback) {
+        if (value)
+            pDetector->registerDataCallback(dataCallbackC,  (void *)this);
+        else
+            pDetector->registerDataCallback(NULL,  NULL);
     } else if (function == SDBitDepth) {
         retVal = pDetector->setBitDepth(value); 
         status |= setIntegerParam(SDBitDepth, retVal); 
@@ -613,6 +621,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDUseCountRateString,   asynParamInt32,  &SDUseCountRate); 
     createParam(SDUsePixelMaskString,   asynParamInt32,  &SDUsePixelMask); 
     createParam(SDUseAngularConvString, asynParamInt32,  &SDUseAngularConv); 
+    createParam(SDUseDataCallbackString,asynParamInt32,  &SDUseDataCallback); 
     createParam(SDBitDepthString,       asynParamInt32,  &SDBitDepth); 
     createParam(SDNumGatesString,       asynParamInt32,  &SDNumGates); 
     createParam(SDNumCyclesString,      asynParamInt32,  &SDNumCycles); 

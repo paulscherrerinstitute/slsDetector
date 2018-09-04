@@ -496,4 +496,27 @@ record (busy, "$(P)$(R)SaveSetup")
     field (ZNAM, "Done")
     field (ONAM, "Save")
 }
+#----------------------------------
+# Enable Data Callback
+#----------------------------------
+record (bo, "$(P)$(R)UseDataCallback")
+{
+    field (DESC, "Enable data callback")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_DATA_CALLBACK")
+    field (ZNAM, "Disable")
+    field (ONAM, "Enable")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+
+record (bi, "$(P)$(R)UseDataCallback_RBV")
+{
+    field (DESC, "Enable data callback")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_USE_DATA_CALLBACK")
+    field (ZNAM, "Disabled")
+    field (ONAM, "Enabled")
+    field (SCAN, "I/O Intr")
+}
 

@@ -4,7 +4,7 @@ EXCLUDE_VERSIONS=3.13 3.14.8
 BUILDCLASSES=Linux
 CROSS_COMPILER_TARGET_ARCHS=$(EPICS_HOST_ARCH)
 
-LIBVERSION=v3.0
+LIBVERSION=v3.1.4
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
