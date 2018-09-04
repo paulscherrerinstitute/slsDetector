@@ -60,14 +60,15 @@ detectorData is a structure containing the data and additional information which
 You can  find examples of how this classes can be instatiated in mainClient.cpp and mainReceiver.cpp
 
 
-   \authors <a href="mailto:anna.bergamaschi@psi.ch">Anna Bergamaschi</a>, <a href="mailto:dhanya.maliakal@psi.ch">Dhanya Maliakal</a>
-   @version 0.2
+   \authors <a href="mailto:anna.bergamaschi@psi.ch">Anna Bergamaschi</a>, <a href="mailto:dhanya.thattil@psi.ch">Dhanya Thattil</a>
+   @version 3.0
 <H2>Currently supported detectors</H2>
 \li MYTHEN
 \li GOTTHARD controls
 \li GOTTHARD data receiver
-<H3>Coming soon</H3>
-\li EIGER
+\li	EIGER
+\li JUNGFRAU
+
 
 
 */
@@ -76,7 +77,7 @@ You can  find examples of how this classes can be instatiated in mainClient.cpp 
 @libdoc The slsDetectorUsers class is a minimal interface class which should be instantiated by the users in their acquisition software (EPICS, spec etc.). More advanced configuration functions are not implemented and can be written in a configuration or parameters file that can be read/written.
 */
 /**
-  @short Class for detector functionalitiesto embed the detector controls in the users custom interface e.g. EPICS, Lima etc.
+  @short Class for detector functionalities to embed the detector controls in the users custom interface e.g. EPICS, Lima etc.
 
 */
 
@@ -108,6 +109,13 @@ class slsDetectorUsers
       \returns 0 (offline) or 1 (online)
   */
   int setOnline(int const online=-1);
+
+  /**  @short sets the receivers onlineFlag
+      \param online can be: -1 returns wether the receiver is in online (1) or offline (0) state; 0 receiver in offline state; 1  receiver in online state
+      \returns 0 (offline) or 1 (online)
+  */
+  int setReceiverOnline(int const online=-1);
+
 
   /**
       @short start measurement and acquires
@@ -203,7 +211,7 @@ class slsDetectorUsers
 
   /**
            @short enable/disable count rate corrections 
-      \param i 0 disables, 1 enable, -1 gets
+      \param i 0 disables, 1 enables with default values, -1 gets
       \returns 0 if count corrections disabled, 1 if enabled
   */
    int enableCountRateCorrection(int i=-1);
@@ -262,7 +270,7 @@ class slsDetectorUsers
   */
    int getDetectorSize(int &x0, int &y0, int &nx, int &ny);
   /**
-     @short setsthe maximum detector size
+     @short gets the maximum detector size
      \param x0 horizontal position origin in channel number 
      \param y0 vertical position origin in channel number 
      \param nx number of channels in horiziontal
@@ -307,47 +315,53 @@ class slsDetectorUsers
         @short set/get exposure time value
         \param t time in sn  (-1 gets)
         \param inseconds true if the value is in s, else ns
+        \param imod module number (-1 for all)
         \returns timer set value in ns, or s if specified
     */
 
-   double setExposureTime(double t=-1, bool inseconds=false);
+   double setExposureTime(double t=-1, bool inseconds=false, int imod = -1);
 
     /**
          @short set/get exposure period
         \param t time in ns   (-1 gets)
         \param inseconds true if the value is in s, else ns
+        \param imod module number (-1 for all)
         \returns timer set value in ns, or s if specified
     */
-   double setExposurePeriod(double t=-1, bool inseconds=false);
+   double setExposurePeriod(double t=-1, bool inseconds=false, int imod = -1);
 
     /**
          @short set/get delay after trigger
         \param t time in ns   (-1 gets)
         \param inseconds true if the value is in s, else ns
+        \param imod module number (-1 for all)
         \returns timer set value in ns, or s if specified
     */
-   double setDelayAfterTrigger(double t=-1, bool inseconds=false);
+   double setDelayAfterTrigger(double t=-1, bool inseconds=false, int imod = -1);
 
   /** 
        @short set/get number of gates
       \param t number of gates  (-1 gets)
+      \param imod module number (-1 for all)
       \returns number of gates
   */
-   int64_t setNumberOfGates(int64_t t=-1); 
+   int64_t setNumberOfGates(int64_t t=-1, int imod = -1);
   
   /** 
        @short set/get number of frames i.e. number of exposure per trigger
       \param t number of frames  (-1 gets) 
+      \param imod module number (-1 for all)
       \returns number of frames
   */
-   int64_t setNumberOfFrames(int64_t t=-1);
+   int64_t setNumberOfFrames(int64_t t=-1, int imod = -1);
 
   /** 
        @short set/get number of cycles i.e. number of triggers
       \param t number of frames  (-1 gets) 
+      \param imod module number (-1 for all)
       \returns number of frames
   */
-   int64_t setNumberOfCycles(int64_t t=-1);
+   int64_t setNumberOfCycles(int64_t t=-1, int imod = -1);
   
 
  /** 
@@ -394,7 +408,7 @@ class slsDetectorUsers
    int setReceiverMode(int n=-1);
 
   /**
-     @short register calbback for accessing detector final data
+     @short register calbback for accessing detector final data, also enables data streaming in client and receiver (if receiver exists)
      \param userCallback function for plotting/analyzing the data. Its arguments are  the data structure d and the frame number f, s is for subframe number for eiger for 32 bit mode
   */
 
@@ -438,13 +452,34 @@ class slsDetectorUsers
   virtual void finalizeDataset(double *a, double *v, double *e, int &np); 
 
 
-  /**
-   	 Enable data streaming from receiver (zmq)
-   	 \param i 1 to set, 0 to reset and -1 to get
-   	 \returns data streaming enable
-   */
+  /** Enable or disable streaming data from receiver (creates transmitting sockets)
+   * @param enable 0 to disable 1 to enable -1 to only get the value
+   * @returns data streaming from receiver enable
+  */
    int enableDataStreamingFromReceiver(int i=-1);
 
+   /**
+    * Enable data streaming to client (creates receiving sockets)
+    * @param i 0 to disable, 1 to enable, -1 to get the value
+    * @returns data streaming to client enable
+    */
+   int enableDataStreamingToClient(int i=-1);
+
+   /** (for expert users)
+    * Set/Get receiver streaming out ZMQ port
+    * For multi modules, it calculates (increments), sets the ports and restarts the sockets
+    * @param i sets, -1 gets
+    * @returns receiver streaming out ZMQ port (if multiple, of first receiver socket)
+    */
+   int setReceiverDataStreamingOutPort(int i=-1);
+
+   /** (for expert users)
+    * Set/Get client streaming in ZMQ port
+    * For multi modules, it calculates (increments), sets the ports and restarts the sockets
+    * @param i sets, -1 gets
+    * @returns client streaming in ZMQ port (if multiple, of first client socket)
+    */
+   int setClientDataStreamingInPort(int i=-1);
 
   /**
      get get Module Firmware Version
@@ -540,6 +575,90 @@ class slsDetectorUsers
     */
    string getCommand(int narg, char *args[], int pos=-1);
 
+   /************************************************************************
+
+                            ADVANCED FUNCTIONS
+
+   *********************************************************************/
+   /**
+      @short sets clock divider of detector
+      \param value value to be set (-1 gets)
+      \returns speed of detector
+    */
+   int setClockDivider(int value);
+
+    /**
+      @short sets parallel mode
+      \param value 0 for non parallel, 1 for parallel, 2 for safe mode (-1 gets)
+      \returns gets parallel mode
+    */
+   int setParallelMode(int value);
+
+    /**
+      @short sets all trimbits to value (only available for eiger)
+      \param val value to be set (-1 gets)
+      \param id module index (-1 for all)
+      \returns value set
+    */
+   int setAllTrimbits(int val, int id = -1);
+
+   /**
+      @short set dac value
+      \param dac dac as string. can be vcmp_ll, vcmp_lr, vcmp_rl, vcmp_rr, vthreshold, vrf, vrs, vtr, vcall, vcp. others not supported
+      \param val value to be set (-1 gets)
+      \param id module index (-1 for all)
+      \returns dac value or -1 (if id=-1 & dac value is different for all modules) or -9999 if dac string does not match
+    */
+   int setDAC(string dac, int val, int id = -1);
+
+   /**
+      @short get adc value
+      \param adc adc as string. can be temp_fpga, temp_fpgaext, temp_10ge, temp_dcdc, temp_sodl, temp_sodr, temp_fpgafl, temp_fpgafr. others not supported
+      \param id module index (-1 for all)
+      \returns adc value in millidegree Celsius or -1 (if id=-1 & adc value is different for all modules) or -9999 if adc string does not match
+    */
+   int getADC(string adc, int id = -1);
+
+   /**
+      @short start receiver listening mode
+      \param returns OK or FAIL
+    */
+   int startReceiver();
+
+   /**
+      @short stop receiver listening mode
+      \param returns OK or FAIL
+    */
+   int stopReceiver();
+
+   /**
+      start detector real time acquisition in non blocking mode
+      does not include scans, scripts, incrementing file index, s
+      tarting/stopping receiver, resetting frames caught in receiver
+      \returns OK if all detectors are properly started, FAIL otherwise
+   */
+   int startAcquisition();
+
+   /**
+      stop detector real time acquisition
+      \returns OK if all detectors are properly started, FAIL otherwise
+   */
+   int stopAcquisition();
+
+   /**
+    * set receiver in silent mode
+    * @param i 1 sets, 0 unsets (-1 gets)
+    * @return silent mode of receiver
+    */
+   int setReceiverSilentMode(int i);
+
+   /**
+    * set high voltage
+    * @param i > 0 sets, 0 unsets, (-1 gets)
+    * @return high voltage
+    */
+   int setHighVoltage(int i);
+
   /************************************************************************
 
                            STATIC FUNCTIONS
@@ -614,7 +733,7 @@ class slsDetectorUsers
 
   /**
      @short returns external communication mode string from index
-     \param f index for communication mode
+     \param s index for communication mode
      \returns  auto, trigger, ro_trigger, gating, triggered_gating, unknown when wrong mode
   */
 
@@ -625,6 +744,7 @@ class slsDetectorUsers
     if (s== "gating") return 3;						\
     if (s== "triggered_gating") return 4;				\
     return -1;							};
+
 
  private:
   multiSlsDetector *myDetector;
