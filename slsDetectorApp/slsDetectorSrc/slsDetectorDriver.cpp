@@ -211,7 +211,9 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     NDArray *pImage; 
     int ndims = 2;
     size_t dims[2];
-    int totalBytes; 
+    int totalBytes = 0; 
+    NDDataType_t dtype = NDFloat64;
+    void *pBuffer = NULL;
     int imageCounter;
     int arrayCallbacks;
     epicsTimeStamp timeStamp; 
@@ -225,15 +227,16 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     dims[0] = pData->npoints; 
     dims[1] = pData->npy; 
     totalBytes = dims[0]*dims[1]*8; 
+    pBuffer = pData->values;
     if (dims[1] == 1) ndims = 1; 
 
     /* Get the current time */
     epicsTimeGetCurrent(&timeStamp);
 
     /* Allocate a new image buffer */
-    pImage = this->pNDArrayPool->alloc(ndims, dims, NDFloat64, totalBytes, NULL);
-    memcpy(pImage->pData,  pData->values, totalBytes);
-    pImage->dataType = NDFloat64;
+    pImage = this->pNDArrayPool->alloc(ndims, dims, dtype, totalBytes, NULL);
+    memcpy(pImage->pData,  pBuffer, totalBytes);
+    pImage->dataType = dtype;
     pImage->ndims = ndims;
     pImage->dims[0].size = dims[0];
     pImage->dims[0].offset = 0;
