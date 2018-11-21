@@ -9,12 +9,15 @@
  *
  */
  
+#include <stdlib.h>
+
 #include <ADDriver.h>
 #include <asynNDArrayDriver.h>
 #include <asynOctetSyncIO.h>
 
 #include <iocsh.h>
 #include <epicsExit.h>
+#include <epicsString.h>
 #include <epicsThread.h>
 
 #include "slsDetectorUsers.h"
@@ -23,6 +26,7 @@
 #include <epicsExport.h>
 
 #define MAX_FILENAME_LEN 256
+#define MAX_COMMAND_ARG 20
 
 static const char *driverName = "slsDetectorDriver";
 
@@ -44,6 +48,8 @@ static const char *driverName = "slsDetectorDriver";
 #define SDNumFramesString       "SD_NUM_FRAMES"
 #define SDTimingModeString      "SD_TMODE"
 #define SDRecvModeString        "SD_RECV_MODE"
+#define SDCommandString         "SD_COMMAND"
+#define SDReplyString           "SD_REPLY"
 #define SDSetupFileString       "SD_SETUP_FILE"
 #define SDLoadSetupString       "SD_LOAD_SETUP"
 #define SDSaveSetupString       "SD_SAVE_SETUP"
@@ -87,6 +93,8 @@ public:
     int SDNumFrames; 
     int SDTimingMode; 
     int SDRecvMode;
+    int SDCommand;
+    int SDReply;
     int SDSetupFile; 
     int SDLoadSetup; 
     int SDSaveSetup; 
@@ -313,6 +321,41 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
         }
         status |= setStringParam(SDFlatFieldPath,
                     pDetector->getFlatFieldCorrectionFile().c_str()); 
+    } else if (function == SDCommand) {
+        if (value && strlen(value) != 0) {
+            char *output = epicsStrDup(value);
+            char *str, *token, *saveptr;
+            char *argv[MAX_COMMAND_ARG];
+            int argc = 0;
+            for(str=output; ;str=NULL) {
+                token = epicsStrtok_r(str, " ", &saveptr);
+                if (token == NULL)
+                    break;
+                if (argc >= MAX_COMMAND_ARG) {
+                    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: Command has more than %d parameters: %s\n", driverName, functionName, MAX_COMMAND_ARG, value);
+                    break;
+                }
+                argv[argc++] = token;
+            }
+            std::string reply;
+            if (argc >= 2) {
+                char **params = argv + 1;
+                int num = argc - 1;
+                if (epicsStrCaseCmp(argv[0], "get") == 0)
+                    reply = pDetector->getCommand(num, params);
+                else if (epicsStrCaseCmp(argv[0], "put") == 0)
+                    reply = pDetector->putCommand(num, params);
+                else
+                    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: Command type is neither \"put\" nor \"get\": %s\n", driverName, functionName, argv[0]);
+            } else
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                "%s:%s: Command expects more than 2 parameters: got %d\n", driverName, functionName, argc);
+
+            free(output);
+            status |= setStringParam(SDReply, reply.c_str());
+        }
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM) 
@@ -628,6 +671,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames); 
     createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode); 
     createParam(SDRecvModeString,       asynParamInt32,  &SDRecvMode);
+    createParam(SDCommandString,        asynParamOctet,  &SDCommand); 
+    createParam(SDReplyString,          asynParamOctet,  &SDReply); 
     createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile); 
     createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup); 
     createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 

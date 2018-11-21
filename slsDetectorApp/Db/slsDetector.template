@@ -519,4 +519,24 @@ record (bi, "$(P)$(R)UseDataCallback_RBV")
     field (ONAM, "Enabled")
     field (SCAN, "I/O Intr")
 }
+#----------------------------------
+# Command Interface
+#----------------------------------
+record (waveform, "$(P)$(R)Command")
+{
+    field (DESC, "Command")
+    field (DTYP, "asynOctetWrite")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_COMMAND")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+}
+record (waveform, "$(P)$(R)Reply")
+{
+    field (DESC, "Reply")
+    field (DTYP, "asynOctetRead")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_REPLY")
+    field (FTVL, "UCHAR")
+    field (NELM, "256")
+    field (SCAN, "I/O Intr")
+}
 
