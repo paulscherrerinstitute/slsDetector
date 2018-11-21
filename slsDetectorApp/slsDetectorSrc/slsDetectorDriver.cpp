@@ -125,7 +125,7 @@ int dataCallbackC(detectorData *pData, int n, int s, void *pArg)
 {
     if (pData == NULL)
        return 0; 
- 
+
     if (pArg  != NULL) {
         slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg; 
         pDetector->dataCallback(pData); 
@@ -228,19 +228,19 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     if (dims[1] == 1) ndims = 1; 
 
     /* Get the current time */
-    epicsTimeGetCurrent(&timeStamp); 
+    epicsTimeGetCurrent(&timeStamp);
 
     /* Allocate a new image buffer */
-    pImage = this->pNDArrayPool->alloc(ndims, dims, NDFloat64, totalBytes, NULL); 
-    memcpy(pImage->pData,  pData->values, totalBytes); 
+    pImage = this->pNDArrayPool->alloc(ndims, dims, NDFloat64, totalBytes, NULL);
+    memcpy(pImage->pData,  pData->values, totalBytes);
     pImage->dataType = NDFloat64;
-    pImage->ndims = ndims; 
-    pImage->dims[0].size = dims[0]; 
-    pImage->dims[0].offset = 0; 
-    pImage->dims[0].binning = 1; 
-    pImage->dims[1].size = dims[1]; 
-    pImage->dims[1].offset = 0; 
-    pImage->dims[1].binning = 1; 
+    pImage->ndims = ndims;
+    pImage->dims[0].size = dims[0];
+    pImage->dims[0].offset = 0;
+    pImage->dims[0].binning = 1;
+    pImage->dims[1].size = dims[1];
+    pImage->dims[1].offset = 0;
+    pImage->dims[1].binning = 1;
 
     pImage->pAttributeList->add("ColorMode", "Color Mode", NDAttrInt32, &colorMode);
 
