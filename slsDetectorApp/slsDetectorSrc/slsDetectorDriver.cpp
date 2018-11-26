@@ -179,7 +179,7 @@ void slsDetectorDriver::acquisitionTask()
         }
         
         /* Poll detector temperature */
-        setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga"));
+        setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
         callParamCallbacks(); 
 
         /* Start acquisition,  this is a blocking function */
@@ -736,7 +736,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     status |= setIntegerParam(SDUsePixelMask,  pDetector->enablePixelMaskCorrection());
     status |= setIntegerParam(SDUseAngularConv,  pDetector->enableAngularConversion());
 
-    status |= setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga"));
+    status |= setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
     status |= setIntegerParam(ADStatus,        pDetector->getDetectorStatus());
 
     callParamCallbacks();
