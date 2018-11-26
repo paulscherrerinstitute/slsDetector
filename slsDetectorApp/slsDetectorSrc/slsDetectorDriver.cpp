@@ -48,6 +48,7 @@ static const char *driverName = "slsDetectorDriver";
 #define SDNumFramesString       "SD_NUM_FRAMES"
 #define SDTimingModeString      "SD_TMODE"
 #define SDRecvModeString        "SD_RECV_MODE"
+#define SDHighVoltageString     "SD_HIGH_VOLTAGE"
 #define SDCommandString         "SD_COMMAND"
 #define SDReplyString           "SD_REPLY"
 #define SDSetupFileString       "SD_SETUP_FILE"
@@ -93,6 +94,7 @@ public:
     int SDNumFrames; 
     int SDTimingMode; 
     int SDRecvMode;
+    int SDHighVoltage;
     int SDCommand;
     int SDReply;
     int SDSetupFile; 
@@ -175,6 +177,10 @@ void slsDetectorDriver::acquisitionTask()
             this->lock();
             getIntegerParam(ADAcquire, &acquire);
         }
+        
+        /* Poll detector temperature */
+        setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga"));
+        callParamCallbacks(); 
 
         /* Start acquisition,  this is a blocking function */
         this->unlock();
@@ -518,6 +524,9 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == SDRecvMode) {
         int recvMode = pDetector->setReceiverMode(value);
         status |= setIntegerParam(SDRecvMode, recvMode);
+    } else if (function == SDHighVoltage) {
+        pDetector->setHighVoltage(value);
+        status |= setIntegerParam(SDHighVoltage,    pDetector->setHighVoltage(-1));
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM) status = ADDriver::writeInt32(pasynUser, value);
@@ -674,6 +683,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames); 
     createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode); 
     createParam(SDRecvModeString,       asynParamInt32,  &SDRecvMode);
+    createParam(SDHighVoltageString,    asynParamFloat64,&SDHighVoltage);
     createParam(SDCommandString,        asynParamOctet,  &SDCommand); 
     createParam(SDReplyString,          asynParamOctet,  &SDReply); 
     createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile); 
@@ -726,6 +736,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     status |= setIntegerParam(SDUsePixelMask,  pDetector->enablePixelMaskCorrection());
     status |= setIntegerParam(SDUseAngularConv,  pDetector->enableAngularConversion());
 
+    status |= setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga"));
     status |= setIntegerParam(ADStatus,        pDetector->getDetectorStatus());
 
     callParamCallbacks();

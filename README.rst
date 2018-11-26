@@ -12,25 +12,26 @@ and a client side C++ library to communicate with the server. This driver is usi
 Implementation of standard driver parameters from ADBase.template and NDFile.template
 -------------------------------------------------------------------------------------
 
-========================  =====================   ============
-Parameter index variable  EPICS record name       Description
-========================  =====================   ============
-ADManufacturer            $(P)$(R)Manufacturer    Detector manuafacturer, either PSI or Dectris
-ADModel                   $(P)$(R)Model           Detector type, Mythen, Eiger
-ADMaxSizeX                $(P)$(R)SizeX           Detector maximum size in X
-ADMaxSizeY                $(P)$(R)SizeY           Detector maximum size in Y
-ADMinX                    $(P)$(R)MinX            First pixel to read in the X direction.
-ADMinX                    $(P)$(R)MinY            First pixel to read in theY direction.
-ADSizeX                   $(P)$(R)SizeX           DetectorDetector size in X
-ADSizeY                   $(P)$(R)SizeY           DetectorDetector size in Y Depending on the hardware, the actual setting maybe rounded to the closest module.
-ADAcquireTime             $(P)$(R)AcquireTime     Exposure time measured in in seconds
-ADAcquirePeriod           $(P)$(R)AcquirePeriod   Exposure period in case of multiple images measured in seconds
-NDFileNumber              $(P)$(R)FileNumber      File number
-NDFilePath                $(P)$(R)FilePath        File path
-NDFileName                $(P)$(R)FileName        File base name
-NDFullFileName            $(P)$(R)FullFileName    Composed from format "%s%s_%d", FilePath, FileName, FileNumber
-NDAutoSave                $(P)$(R)AutoSave        Write flag (0=No, 1=Yes) controlling whether a file is automatically saved each time acquisition completes.
-========================  =====================   ============
+========================  =========================   ============
+Parameter index variable  EPICS record name           Description
+========================  =========================   ============
+ADManufacturer            $(P)$(R)Manufacturer        Detector manuafacturer, either PSI or Dectris
+ADModel                   $(P)$(R)Model               Detector type, Mythen, Eiger
+ADMaxSizeX                $(P)$(R)SizeX               Detector maximum size in X
+ADMaxSizeY                $(P)$(R)SizeY               Detector maximum size in Y
+ADMinX                    $(P)$(R)MinX                First pixel to read in the X direction.
+ADMinX                    $(P)$(R)MinY                First pixel to read in theY direction.
+ADSizeX                   $(P)$(R)SizeX               DetectorDetector size in X
+ADSizeY                   $(P)$(R)SizeY               DetectorDetector size in Y Depending on the hardware, the actual setting maybe rounded to the closest module.
+ADAcquireTime             $(P)$(R)AcquireTime         Exposure time measured in in seconds
+ADAcquirePeriod           $(P)$(R)AcquirePeriod       Exposure period in case of multiple images measured in seconds
+ADTemperatureActual       $(P)$(R)TemperatureActual   Detector fpga temperature
+NDFileNumber              $(P)$(R)FileNumber          File number
+NDFilePath                $(P)$(R)FilePath            File path
+NDFileName                $(P)$(R)FileName            File base name
+NDFullFileName            $(P)$(R)FullFileName        Composed from format "%s%s_%d", FilePath, FileName, FileNumber
+NDAutoSave                $(P)$(R)AutoSave            Write flag (0=No, 1=Yes) controlling whether a file is automatically saved each time acquisition completes.
+========================  =========================   ============
 
 slsDetector specific parameters
 -------------------------------
@@ -51,6 +52,8 @@ SDUseAngularConv          asynInt32      r/w    SD_USE_ANGULAR_CONV  $(P)$(R)Use
 SDBitDepth                asynInt32      r/w    SD_BIT_DEPTH         $(P)$(R)BitDepth          Dynamic range
 SDTimingMode              asynInt32      r/w    SD_TMODE             $(P)$(R)TimingMode        External signal communication mode, triggering, gating 
 SDDelayTime               asynFloat64    r/w    SD_DELAY_TIME        $(P)$(R)DelayTime         Delay in seconds between external trigger and the start of image acquisition
+SDRecvMode                asynInt32      r/w    SD_RECV_MODE         $(P)$(R)ReceiverMode      Receiver data callback frequency
+SDHighVoltage             asynInt32      r/w    SD_HIGH_VOLTAGE      $(P)$(R)HighVoltage       Detector high voltage
 SDNumGates                asynInt32      r/w    SD_NGATES            $(P)$(R)NumGates          Number of gates if timing mode is gating        
 SDNumCycles               asynInt32      r/w    SD_NCYCLES           $(P)$(R)NumCycles         Number of triggeres     
 SDNumFrames               asynInt32      r/w    SD_NFRAMES           $(P)$(R)NumFrames         Number of frames to acquire for each trigger    

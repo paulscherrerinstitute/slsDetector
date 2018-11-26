@@ -467,6 +467,27 @@ record (longin, "$(P)$(R)ReceiverMode_RBV")
     field (SCAN, "I/O Intr")
 }
 #----------------------------------
+# High Voltage
+#----------------------------------
+record (longout, "$(P)$(R)HighVoltage")
+{
+    field (DESC, "High voltage")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_HIGH_VOLTAGE")
+    field (EGU,  "V")
+    field (VAL,  "0")
+    field (PINI, "YES")
+}
+
+record (longin, "$(P)$(R)HighVoltage_RBV")
+{
+    field (DESC, "High voltage")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_HIGH_VOLTAGE")
+    field (EGU,  "V")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
 # Setup File
 #----------------------------------
 record (waveform, "$(P)$(R)SetupFile")
