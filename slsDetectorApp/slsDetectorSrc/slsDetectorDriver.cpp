@@ -506,11 +506,11 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == ADAcquire) {
         if (value) {
             int runStatus = pDetector->getDetectorStatus(); 
-            if (runStatus != 0  && runStatus  !=  3) {
+            if (runStatus != 0  && runStatus != 3 && runStatus != 6) {
                 /* Detector not ready */
                 setIntegerParam(ADAcquire, 0); 
                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-                "%s:%s:Acquire: detector not ready status=%d\n", driverName, functionName, runStatus);
+                "%s:%s:Acquire: detector not ready status=%s\n", driverName, functionName, pDetector->runStatusType(runStatus).c_str());
             }
             else
                 /* Send an event to wake up the acquisition task.  */
