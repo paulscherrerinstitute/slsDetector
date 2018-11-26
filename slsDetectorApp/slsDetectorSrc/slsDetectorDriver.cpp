@@ -179,7 +179,7 @@ void slsDetectorDriver::acquisitionTask()
         }
         
         /* Poll detector temperature */
-        setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
+        setDoubleParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
         callParamCallbacks(); 
 
         /* Start acquisition,  this is a blocking function */
@@ -683,7 +683,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames); 
     createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode); 
     createParam(SDRecvModeString,       asynParamInt32,  &SDRecvMode);
-    createParam(SDHighVoltageString,    asynParamFloat64,&SDHighVoltage);
+    createParam(SDHighVoltageString,    asynParamInt32,  &SDHighVoltage);
     createParam(SDCommandString,        asynParamOctet,  &SDCommand); 
     createParam(SDReplyString,          asynParamOctet,  &SDReply); 
     createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile); 
@@ -736,7 +736,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     status |= setIntegerParam(SDUsePixelMask,  pDetector->enablePixelMaskCorrection());
     status |= setIntegerParam(SDUseAngularConv,  pDetector->enableAngularConversion());
 
-    status |= setIntegerParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
+    status |= setDoubleParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
     status |= setIntegerParam(SDHighVoltage,    pDetector->setHighVoltage(-1));
     status |= setIntegerParam(ADStatus,        pDetector->getDetectorStatus());
 
