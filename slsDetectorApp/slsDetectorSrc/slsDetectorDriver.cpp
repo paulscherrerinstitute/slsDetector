@@ -226,15 +226,38 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     epicsInt32 colorMode = NDColorModeMono;
     const char *functionName = "dataCallback";
 
-    if (pData == NULL || pData->values == NULL || pData->npoints <= 0) return; 
+    if (pData == NULL || (pData->values == NULL && pData->cvalues == NULL) || pData->npoints <= 0) return; 
 
     this ->lock(); 
 
-    dims[0] = pData->npoints; 
-    dims[1] = pData->npy; 
-    totalBytes = dims[0]*dims[1]*8; 
-    pBuffer = pData->values;
-    if (dims[1] == 1) ndims = 1; 
+    dims[0] = pData->npoints;
+    dims[1] = pData->npy;
+    if (pData->values) {
+        totalBytes = dims[0]*dims[1]*8;
+        dtype = NDFloat64;
+        pBuffer = pData->values;
+    }
+    else if (pData->cvalues){
+        totalBytes = pData->databytes;
+        switch (pData->dynamicRange / 8) {
+            case 1:
+                dtype = NDUInt8;
+                break;
+            case 2:
+                dtype = NDUInt16;
+                break;
+            case 4:
+                dtype = NDUInt32;
+                break;
+            default:
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                      "%s:%s: unsupported dynamic range %d\n",
+                      driverName, functionName, pData->dynamicRange);
+                return;
+        }
+        pBuffer = pData->cvalues;
+    }
+    if (dims[1] == 1) ndims = 1;
 
     /* Get the current time */
     epicsTimeGetCurrent(&timeStamp);
