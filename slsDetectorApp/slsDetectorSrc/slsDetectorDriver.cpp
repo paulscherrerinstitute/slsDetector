@@ -537,9 +537,15 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
             else
                 /* Send an event to wake up the acquisition task.  */
                 epicsEventSignal(this->startEventId);
-        } else
-            /* Stop measurement */
-            pDetector->stopMeasurement();
+        } else {
+            /* Stop measurement.
+             * If in continuous mode, let the current acquisition fininish, because 
+             * abort has a high chance of hangup as of slsDetector library v4.1.0 */
+            int imageMode;
+            getIntegerParam(ADImageMode, &imageMode);
+            if (imageMode != ADImageContinuous)
+                pDetector->stopMeasurement();
+        }
     } else if (function ==  NDAutoSave) {
         int autoSave = pDetector->enableWriteToFile(value);
         status |= setIntegerParam(NDAutoSave, autoSave);
