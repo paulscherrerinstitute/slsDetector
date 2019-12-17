@@ -471,6 +471,28 @@ record (longin, "$(P)$(R)ReceiverMode_RBV")
     field (SCAN, "I/O Intr")
 }
 #----------------------------------
+# Receiver stream on/off
+#----------------------------------
+record (bo, "$(P)$(R)ReceiverStream")
+{
+    field (DESC, "Enable receiver stream")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_RECV_STREAM")
+    field (ZNAM, "Disable")
+    field (ONAM, "Enable")
+    field (VAL,  "1")
+    field (PINI, "YES")
+}
+record (bi, "$(P)$(R)ReceiverStream_RBV")
+{
+    field (DESC, "Enable receiver stream")
+    field (DTYP, "asynInt32")
+    field (INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_RECV_STREAM")
+    field (ZNAM, "Disabled")
+    field (ONAM, "Enabled")
+    field (SCAN, "I/O Intr")
+}
+#----------------------------------
 # High Voltage
 #----------------------------------
 record (longout, "$(P)$(R)HighVoltage")

@@ -12,6 +12,7 @@ $(P)$(R)UseAngularConv
 $(P)$(R)BitDepth
 $(P)$(R)TimingMode
 $(P)$(R)ReceiverMode
+$(P)$(R)ReceiverStream
 $(P)$(R)HighVoltage
 $(P)$(R)DelayTime
 $(P)$(R)NumGates

@@ -8,7 +8,7 @@
  * Created:  June 8, 2012
  *
  */
- 
+
 #include <stdlib.h>
 
 #include <ADDriver.h>
@@ -48,6 +48,7 @@ static const char *driverName = "slsDetectorDriver";
 #define SDNumFramesString       "SD_NUM_FRAMES"
 #define SDTimingModeString      "SD_TMODE"
 #define SDRecvModeString        "SD_RECV_MODE"
+#define SDRecvStreamString      "SD_RECV_STREAM"
 #define SDHighVoltageString     "SD_HIGH_VOLTAGE"
 #define SDCommandString         "SD_COMMAND"
 #define SDReplyString           "SD_REPLY"
@@ -66,18 +67,18 @@ public:
     /* These are the methods that we override from ADDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
-    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, 
+    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value,
                                     size_t nChars, size_t *nActual);
-    virtual void report(FILE *fp, int details); 
+    virtual void report(FILE *fp, int details);
 
     void dataCallback(detectorData *pData); /* This should be private but is called from C so must be public */
-    void acquisitionTask(); 
-    void shutdown(); 
- 
+    void acquisitionTask();
+    void shutdown();
+
  protected:
     int SDSetting;
     #define FIRST_SD_PARAM SDSetting
-    int SDDelayTime; 
+    int SDDelayTime;
     int SDThreshold;
     int SDEnergy;
     int SDOnline;
@@ -88,25 +89,26 @@ public:
     int SDUsePixelMask;
     int SDUseAngularConv;
     int SDUseDataCallback;
-    int SDBitDepth; 
-    int SDNumGates; 
-    int SDNumCycles; 
-    int SDNumFrames; 
-    int SDTimingMode; 
+    int SDBitDepth;
+    int SDNumGates;
+    int SDNumCycles;
+    int SDNumFrames;
+    int SDTimingMode;
     int SDRecvMode;
+    int SDRecvStream;
     int SDHighVoltage;
     int SDCommand;
     int SDReply;
-    int SDSetupFile; 
-    int SDLoadSetup; 
-    int SDSaveSetup; 
-    #define LAST_SD_PARAM SDSaveSetup 
+    int SDSetupFile;
+    int SDLoadSetup;
+    int SDSaveSetup;
+    #define LAST_SD_PARAM SDSaveSetup
 
- private:                                       
+ private:
     /* These are the methods that are new to this class */
 
     /* Our data */
-    slsDetectorUsers *pDetector; 
+    slsDetectorUsers *pDetector;
     epicsEventId startEventId;
 };
 
@@ -114,7 +116,7 @@ public:
 
 static void c_shutdown(void* arg) {
     slsDetectorDriver *p = (slsDetectorDriver*)arg;
-    p->shutdown(); 
+    p->shutdown();
 }
 
 /* Dummy implementation */
@@ -123,112 +125,109 @@ int dummyFinishedCallbackC(double progress, int status, void *pArg)
     return 0;
 }
 
-int dataCallbackC(detectorData *pData, int n, int s, void *pArg) 
+int dataCallbackC(detectorData *pData, int n, int s, void *pArg)
 {
     if (pData == NULL)
-       return 0; 
+       return 0;
 
     if (pArg  != NULL) {
-        slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg; 
-        pDetector->dataCallback(pData); 
+        slsDetectorDriver *pDetector = (slsDetectorDriver*)pArg;
+        pDetector->dataCallback(pData);
     }
 
-    return 0; 
+    return 0;
 }
 
 void acquisitionTaskC(void *drvPvt)
 {
-    slsDetectorDriver *pDetector = (slsDetectorDriver*)drvPvt; 
-    pDetector->acquisitionTask(); 
+    slsDetectorDriver *pDetector = (slsDetectorDriver*)drvPvt;
+    pDetector->acquisitionTask();
 }
 
 void slsDetectorDriver::shutdown()
 {
     if (pDetector)
-        delete pDetector; 
+        delete pDetector;
 }
 
 void slsDetectorDriver::acquisitionTask()
 {
-    int status = asynSuccess; 
-    int acquire; 
+    int status = asynSuccess;
+    int acquire;
     int imageMode;
     char filePath[MAX_FILENAME_LEN];
     char fileName[MAX_FILENAME_LEN];
-    int  fileNumber; 
-    char fullFileName[MAX_FILENAME_LEN]; 
+    int  fileNumber;
+    char fullFileName[MAX_FILENAME_LEN];
     static const char *functionName = "acquisitionTask";
-    this->lock(); 
+    this->lock();
 
     while (1) {
         /* Is acquisition active? */
         getIntegerParam(ADAcquire, &acquire);
-        
+
         /* If we are not acquiring then wait for a semaphore that is given when acquisition is started */
-        if (!acquire) 
+        if (!acquire)
         {
             setIntegerParam(ADStatus, 0);
             callParamCallbacks();
             /* Release the lock while we wait for an event that says acquire has started, then lock again */
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, 
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
                 "%s:%s: waiting for acquire to start\n", driverName, functionName);
             this->unlock();
             status = epicsEventWait(this->startEventId);
             this->lock();
             getIntegerParam(ADAcquire, &acquire);
         }
-        
+
         /* Poll detector temperature */
         setDoubleParam(ADTemperatureActual, pDetector->getADC("temp_fpga")/1000.);
-        callParamCallbacks(); 
+        callParamCallbacks();
 
         /* Start acquisition,  this is a blocking function */
         this->unlock();
-        if (pDetector->enableDataStreamingFromReceiver(-1) == 0 && pDetector->enableDataStreamingFromReceiver(1) == 0)
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: no data streaming is available\n", driverName, functionName);
         pDetector->startMeasurement();
-        this->lock(); 
+        this->lock();
 
         /* Update detector status */
         setIntegerParam(ADStatus, pDetector->getDetectorStatus());
-        fileNumber = pDetector->getFileIndex(); 
-        setIntegerParam(NDFileNumber, fileNumber); 
-    
+        fileNumber = pDetector->getFileIndex();
+        setIntegerParam(NDFileNumber, fileNumber);
+
         /* Compose last saved file name
          * Not using FileTemplate because it is builtin slsDetector library
          * */
         getStringParam(NDFilePath, sizeof(filePath), filePath);
-        getStringParam(NDFileName, sizeof(fileName), fileName); 
+        getStringParam(NDFileName, sizeof(fileName), fileName);
         getIntegerParam(NDFileNumber, &fileNumber);
         epicsSnprintf(fullFileName, MAX_FILENAME_LEN, "%s%s_%d", filePath, fileName, fileNumber-1);
-        setStringParam(NDFullFileName, fullFileName); 
+        setStringParam(NDFullFileName, fullFileName);
 
         getIntegerParam(ADImageMode, &imageMode);
         if (imageMode == ADImageSingle || imageMode == ADImageMultiple) {
-            setIntegerParam(ADAcquire,  0); 
-            callParamCallbacks(); 
+            setIntegerParam(ADAcquire,  0);
+            callParamCallbacks();
         }
     }
 }
 
 void slsDetectorDriver::dataCallback(detectorData *pData)
 {
-    NDArray *pImage; 
+    NDArray *pImage;
     int ndims = 2;
     size_t dims[2];
-    int totalBytes = 0; 
+    int totalBytes = 0;
     NDDataType_t dtype = NDFloat64;
     void *pBuffer = NULL;
     int imageCounter;
     int arrayCallbacks;
-    epicsTimeStamp timeStamp; 
+    epicsTimeStamp timeStamp;
     epicsInt32 colorMode = NDColorModeMono;
     const char *functionName = "dataCallback";
 
-    if (pData == NULL || (pData->values == NULL && pData->cvalues == NULL) || pData->npoints <= 0) return; 
+    if (pData == NULL || (pData->values == NULL && pData->cvalues == NULL) || pData->npoints <= 0) return;
 
-    this ->lock(); 
+    this ->lock();
 
     dims[0] = pData->npoints;
     dims[1] = pData->npy;
@@ -282,10 +281,10 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     setIntegerParam(NDArrayCounter, imageCounter);
 
     /* Set the uniqueId and time stamp */
-    pImage->uniqueId = imageCounter; 
-    pImage->timeStamp = timeStamp.secPastEpoch + timeStamp.nsec / 1e9; 
+    pImage->uniqueId = imageCounter;
+    pImage->timeStamp = timeStamp.secPastEpoch + timeStamp.nsec / 1e9;
 
-    /* Get any attributes that have been defined for this driver */        
+    /* Get any attributes that have been defined for this driver */
     this->getAttributes(pImage->pAttributeList);
 
     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
@@ -324,7 +323,7 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
     int acquire;
     getIntegerParam(ADAcquire, &acquire);
     if (acquire == 1) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
     }
@@ -333,26 +332,26 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
     status |= (asynStatus)setStringParam(function, (char *)value);
 
     if (function == NDFilePath) {
-        pDetector->setFilePath(value); 
+        pDetector->setFilePath(value);
         status |= setStringParam(NDFilePath,
-                pDetector->getFilePath().c_str()); 
-        this->checkPath(); 
+                pDetector->getFilePath().c_str());
+        this->checkPath();
     } else if (function == NDFileName) {
-        pDetector->setFileName(value); 
+        pDetector->setFileName(value);
         status |= setStringParam(NDFileName,
-                    pDetector->getFileName().c_str()); 
+                    pDetector->getFileName().c_str());
     } else if (function == SDFlatFieldPath) {
         if (value && strlen(value) != 0) {
-            pDetector->setFlatFieldCorrectionDir(value); 
+            pDetector->setFlatFieldCorrectionDir(value);
         }
         status |= setStringParam(SDFlatFieldPath,
-                    pDetector->getFlatFieldCorrectionDir().c_str()); 
+                    pDetector->getFlatFieldCorrectionDir().c_str());
     } else if (function == SDFlatFieldFile) {
         if (value && strlen(value) != 0) {
-            pDetector->setFlatFieldCorrectionFile(value); 
+            pDetector->setFlatFieldCorrectionFile(value);
         }
         status |= setStringParam(SDFlatFieldPath,
-                    pDetector->getFlatFieldCorrectionFile().c_str()); 
+                    pDetector->getFlatFieldCorrectionFile().c_str());
     } else if (function == SDCommand) {
         if (value && strlen(value) != 0) {
             char *output = epicsStrDup(value);
@@ -390,24 +389,24 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
         }
     } else {
         /* If this is not a parameter we have handled call the base class */
-        if (function < FIRST_SD_PARAM) 
+        if (function < FIRST_SD_PARAM)
             status = ADDriver::writeOctet(pasynUser, value,nChars, nActual);
     }
- 
+
     /* Update any changed parameters */
     callParamCallbacks();
 
-    if (status) 
-        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-              "%s:%s: error, status=%d function=%d, value=%s\n", 
+    if (status)
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+              "%s:%s: error, status=%d function=%d, value=%s\n",
               driverName, functionName, status, function, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%s\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, value=%s\n",
               driverName, functionName, function, value);
 
     *nActual = nChars;
-    return((asynStatus)status); 
+    return((asynStatus)status);
 }
 
 /** Called when asyn clients call pasynInt32->write().
@@ -420,16 +419,16 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     int function = pasynUser->reason;
     int status = asynSuccess;
     char filePath[MAX_FILENAME_LEN];
-    int minX=0, minY=0, sizeX=1, sizeY=1;  
+    int minX=0, minY=0, sizeX=1, sizeY=1;
     static int threshold = -1;
-    int retVal; 
+    int retVal;
     static const char *functionName = "writeInt32";
 
     /* Reject any call to the detector if it is running */
     int acquire;
     getIntegerParam(ADAcquire, &acquire);
     if (function != ADAcquire && acquire == 1) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
     }
@@ -443,13 +442,13 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         function == ADMinY ||
         function == ADSizeX ||
         function == ADSizeY) {
-        getIntegerParam(ADMinX, &minX); 
-        getIntegerParam(ADMinY, &minY); 
-        getIntegerParam(ADSizeX, &sizeX); 
-        getIntegerParam(ADSizeY, &sizeY); 
-        pDetector->setDetectorSize(minX, minY, sizeX, sizeY); 
+        getIntegerParam(ADMinX, &minX);
+        getIntegerParam(ADMinY, &minY);
+        getIntegerParam(ADSizeX, &sizeX);
+        getIntegerParam(ADSizeY, &sizeY);
+        pDetector->setDetectorSize(minX, minY, sizeX, sizeY);
 
-        pDetector->getDetectorSize(minX, minY, sizeX, sizeY); 
+        pDetector->getDetectorSize(minX, minY, sizeX, sizeY);
         status |= setIntegerParam(ADMinX,  minX);
         status |= setIntegerParam(ADMinY,  minY);
         status |= setIntegerParam(ADSizeX, sizeX);
@@ -457,82 +456,82 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         status |= setIntegerParam(NDArraySizeX, sizeX);
         status |= setIntegerParam(NDArraySizeY, sizeY);
     } else if (function == NDFileNumber) {
-        retVal = pDetector->setFileIndex(value); 
-        status |= setIntegerParam(NDFileNumber, retVal); 
+        retVal = pDetector->setFileIndex(value);
+        status |= setIntegerParam(NDFileNumber, retVal);
     } else if (function == SDSetting) {
-        retVal = pDetector->setSettings(value); 
+        retVal = pDetector->setSettings(value);
         /* map undefined and uninitialized settings from 200 to 14 */
 	if (retVal >= 200) {
             retVal -= 186;
 	}
-        status |= setIntegerParam(SDSetting, retVal); 
+        status |= setIntegerParam(SDSetting, retVal);
         /* setSettings override current threshhold, recover it with user's value */
         if (threshold != -1) {
             pDetector->setThresholdEnergy(threshold);
         }
-        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy()); 
+        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy());
     } else if (function == SDThreshold) {
         /* note down user's set value and recover it when settings change */
         threshold = value;
-        retVal = pDetector->setThresholdEnergy(value); 
-        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy()); 
+        retVal = pDetector->setThresholdEnergy(value);
+        status |= setIntegerParam(SDThreshold, pDetector->getThresholdEnergy());
     } else if (function == SDEnergy) {
         /* Threshold energy is automatically set to half of the beam energy */
-        retVal = pDetector->setThresholdEnergy(value / 2); 
+        retVal = pDetector->setThresholdEnergy(value / 2);
         status |= setIntegerParam(SDThreshold, retVal);
-        status |= setIntegerParam(SDEnergy, value); 
+        status |= setIntegerParam(SDEnergy, value);
     } else if (function  == SDOnline) {
-        retVal = pDetector->setOnline(value); 
-        status |= setIntegerParam(SDOnline, retVal); 
+        retVal = pDetector->setOnline(value);
+        status |= setIntegerParam(SDOnline, retVal);
     } else if (function == SDUseFlatField) {
-        retVal = pDetector->enableFlatFieldCorrection(value); 
-        status |= setIntegerParam(SDUseFlatField, retVal); 
+        retVal = pDetector->enableFlatFieldCorrection(value);
+        status |= setIntegerParam(SDUseFlatField, retVal);
     } else if (function == SDUseCountRate) {
-        retVal = pDetector->enableCountRateCorrection(value); 
-        status |= setIntegerParam(SDUseCountRate, retVal); 
+        retVal = pDetector->enableCountRateCorrection(value);
+        status |= setIntegerParam(SDUseCountRate, retVal);
     } else if (function == SDUsePixelMask) {
-        retVal = pDetector->enablePixelMaskCorrection(value); 
-        status |= setIntegerParam(SDUsePixelMask, retVal); 
+        retVal = pDetector->enablePixelMaskCorrection(value);
+        status |= setIntegerParam(SDUsePixelMask, retVal);
     } else if (function == SDUseAngularConv) {
-        retVal = pDetector->enableAngularConversion(value); 
-        status |= setIntegerParam(SDUseAngularConv,retVal); 
+        retVal = pDetector->enableAngularConversion(value);
+        status |= setIntegerParam(SDUseAngularConv,retVal);
     } else if (function == SDUseDataCallback) {
-        if (value)
-            pDetector->registerDataCallback(dataCallbackC,  (void *)this);
-        else
-            pDetector->registerDataCallback(NULL,  NULL);
+        if (pDetector->enableDataStreamingToClient(-1) != value) {
+            retVal = pDetector->enableDataStreamingToClient(value);
+            status |= setIntegerParam(SDUseDataCallback, retVal);
+        }
     } else if (function == SDBitDepth) {
-        retVal = pDetector->setBitDepth(value); 
-        status |= setIntegerParam(SDBitDepth, retVal); 
+        retVal = pDetector->setBitDepth(value);
+        status |= setIntegerParam(SDBitDepth, retVal);
     } else if (function == SDNumGates) {
         retVal = pDetector->setNumberOfGates(value);
-        status |= setIntegerParam(SDNumGates, retVal); 
+        status |= setIntegerParam(SDNumGates, retVal);
     } else if (function == SDNumCycles) {
-        retVal = pDetector->setNumberOfCycles(value); 
-        status |= setIntegerParam(SDNumCycles, retVal); 
+        retVal = pDetector->setNumberOfCycles(value);
+        status |= setIntegerParam(SDNumCycles, retVal);
     } else if (function == SDNumFrames) {
-        retVal = pDetector->setNumberOfFrames(value); 
-        status |= setIntegerParam(SDNumFrames, retVal); 
+        retVal = pDetector->setNumberOfFrames(value);
+        status |= setIntegerParam(SDNumFrames, retVal);
     } else if (function == SDTimingMode) {
-        retVal = pDetector->setTimingMode(value); 
-        status |= setIntegerParam(SDTimingMode, retVal); 
+        retVal = pDetector->setTimingMode(value);
+        status |= setIntegerParam(SDTimingMode, retVal);
     } else if (function == SDLoadSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
         if (pDetector->retrieveDetectorSetup(filePath) != 0)
-            status |= asynError; 
-        setIntegerParam(SDLoadSetup, 0); 
+            status |= asynError;
+        setIntegerParam(SDLoadSetup, 0);
     } else if (function == SDSaveSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
         if (pDetector->dumpDetectorSetup(filePath) != 0)
-            status |= asynError; 
-        setIntegerParam(SDSaveSetup, 0); 
+            status |= asynError;
+        setIntegerParam(SDSaveSetup, 0);
     } else if (function == ADAcquire) {
         if (value) {
-            int runStatus = pDetector->getDetectorStatus(); 
+            int runStatus = pDetector->getDetectorStatus();
             if (runStatus != 0  && runStatus != 3 && runStatus != 6) {
                 /* Detector not ready */
-                setIntegerParam(ADAcquire, 0); 
-                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                setIntegerParam(ADAcquire, 0);
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
                 "%s:%s:Acquire: detector not ready status=%s\n", driverName, functionName, pDetector->runStatusType(runStatus).c_str());
             }
             else
@@ -540,13 +539,18 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
                 epicsEventSignal(this->startEventId);
         } else
             /* Stop measurement */
-            pDetector->stopMeasurement(); 
+            pDetector->stopMeasurement();
     } else if (function ==  NDAutoSave) {
         int autoSave = pDetector->enableWriteToFile(value);
-        status |= setIntegerParam(NDAutoSave, autoSave); 
+        status |= setIntegerParam(NDAutoSave, autoSave);
     } else if (function == SDRecvMode) {
         int recvMode = pDetector->setReceiverMode(value);
         status |= setIntegerParam(SDRecvMode, recvMode);
+    } else if (function == SDRecvStream) {
+        if (pDetector->enableDataStreamingFromReceiver(-1) != value) {
+            int recvStream = pDetector->enableDataStreamingFromReceiver(value);
+            status |= setIntegerParam(SDRecvStream, recvStream);
+        }
     } else if (function == SDHighVoltage) {
         pDetector->setHighVoltage(value);
         status |= setIntegerParam(SDHighVoltage,    pDetector->setHighVoltage(-1));
@@ -554,19 +558,19 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM) status = ADDriver::writeInt32(pasynUser, value);
     }
-   
+
     /* Update any changed parameters */
     callParamCallbacks();
 
-    if (status) 
-        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-              "%s:%s: error, status=%d function=%d, value=%d\n", 
+    if (status)
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+              "%s:%s: error, status=%d function=%d, value=%d\n",
               driverName, functionName, status, function, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%d\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, value=%d\n",
               driverName, functionName, function, value);
-    return((asynStatus)status); 
+    return((asynStatus)status);
 }
 
 /** Called when asyn clients call pasynFloat64->write().
@@ -580,14 +584,14 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
     int addr = 0;
     const char* functionName = "writeFloat64";
 
-    status = getAddress(pasynUser, &addr); 
+    status = getAddress(pasynUser, &addr);
     if (status != asynSuccess) return((asynStatus)status);
 
     /* Reject any call to the detector if it is running */
     int acquire;
     getIntegerParam(ADAcquire, &acquire);
     if (acquire == 1) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
     }
@@ -596,13 +600,13 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
     status = (asynStatus) setDoubleParam(addr, function, value);
 
     if (function == ADAcquireTime) {
-        pDetector->setExposureTime(value, true); 
+        pDetector->setExposureTime(value, true);
         status |= setDoubleParam(ADAcquireTime,    pDetector->setExposureTime(-1, true));
     } else if (function == ADAcquirePeriod) {
-        pDetector->setExposurePeriod(value, true); 
-        status |= setDoubleParam(ADAcquirePeriod,  pDetector->setExposurePeriod(-1, true)); 
+        pDetector->setExposurePeriod(value, true);
+        status |= setDoubleParam(ADAcquirePeriod,  pDetector->setExposurePeriod(-1, true));
     } else if (function == SDDelayTime) {
-        pDetector->setDelayAfterTrigger(value, true); 
+        pDetector->setDelayAfterTrigger(value, true);
         status |= setDoubleParam(SDDelayTime,   pDetector->setDelayAfterTrigger(-1, true));
     } else {
         /* If this is not a parameter we have handled call the base class */
@@ -612,15 +616,15 @@ asynStatus slsDetectorDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 val
     /* Update any changed parameters */
     callParamCallbacks();
 
-    if (status) 
-        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-              "%s:%s: error, status=%d function=%d, value=%g\n", 
+    if (status)
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+              "%s:%s: error, status=%d function=%d, value=%g\n",
               driverName, functionName, status, function, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%g\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, value=%g\n",
               driverName, functionName, function, value);
-    return((asynStatus)status); 
+    return((asynStatus)status);
 }
 
 
@@ -655,14 +659,14 @@ extern "C" int slsDetectorConfig(const char *portName, const char *configFileNam
 }
 
 /** Constructor for slsDetectorDriver driver; most parameters are simply passed to ADDriver::ADDriver.
-  * After calling the base class constructor this method creates a thread to collect the detector data, 
+  * After calling the base class constructor this method creates a thread to collect the detector data,
   * and sets reasonable default values for the parameters defined in this class, asynNDArrayDriver, and ADDriver.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] configFileName The configuration file to the detector.
   * \param[in] detectorId The detector index number running on the same system.
-  * \param[in] maxBuffers The maximum number of NDArray buffers that the NDArrayPool for this driver is 
+  * \param[in] maxBuffers The maximum number of NDArray buffers that the NDArrayPool for this driver is
   *            allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
-  * \param[in] maxMemory The maximum amount of memory that the NDArrayPool for this driver is 
+  * \param[in] maxMemory The maximum amount of memory that the NDArrayPool for this driver is
   *            allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
@@ -683,57 +687,58 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     /* Create the epicsEvents for signaling to the slsDetector task when acquisition starts and stops */
     this->startEventId = epicsEventCreate(epicsEventEmpty);
     if (!this->startEventId) {
-        printf("%s:%s epicsEventCreate failure for start event\n", 
+        printf("%s:%s epicsEventCreate failure for start event\n",
             driverName, functionName);
         return;
     }
 
-    createParam(SDSettingString,        asynParamInt32,  &SDSetting); 
-    createParam(SDDelayTimeString,      asynParamFloat64,&SDDelayTime); 
-    createParam(SDThresholdString,      asynParamInt32,  &SDThreshold); 
-    createParam(SDEnergyString,         asynParamInt32,  &SDEnergy); 
-    createParam(SDOnlineString,         asynParamInt32,  &SDOnline); 
-    createParam(SDFlatFieldPathString,  asynParamOctet,  &SDFlatFieldPath); 
-    createParam(SDFlatFieldFileString,  asynParamOctet,  &SDFlatFieldFile); 
-    createParam(SDUseFlatFieldString,   asynParamInt32,  &SDUseFlatField); 
-    createParam(SDUseCountRateString,   asynParamInt32,  &SDUseCountRate); 
-    createParam(SDUsePixelMaskString,   asynParamInt32,  &SDUsePixelMask); 
-    createParam(SDUseAngularConvString, asynParamInt32,  &SDUseAngularConv); 
-    createParam(SDUseDataCallbackString,asynParamInt32,  &SDUseDataCallback); 
-    createParam(SDBitDepthString,       asynParamInt32,  &SDBitDepth); 
-    createParam(SDNumGatesString,       asynParamInt32,  &SDNumGates); 
-    createParam(SDNumCyclesString,      asynParamInt32,  &SDNumCycles); 
-    createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames); 
-    createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode); 
+    createParam(SDSettingString,        asynParamInt32,  &SDSetting);
+    createParam(SDDelayTimeString,      asynParamFloat64,&SDDelayTime);
+    createParam(SDThresholdString,      asynParamInt32,  &SDThreshold);
+    createParam(SDEnergyString,         asynParamInt32,  &SDEnergy);
+    createParam(SDOnlineString,         asynParamInt32,  &SDOnline);
+    createParam(SDFlatFieldPathString,  asynParamOctet,  &SDFlatFieldPath);
+    createParam(SDFlatFieldFileString,  asynParamOctet,  &SDFlatFieldFile);
+    createParam(SDUseFlatFieldString,   asynParamInt32,  &SDUseFlatField);
+    createParam(SDUseCountRateString,   asynParamInt32,  &SDUseCountRate);
+    createParam(SDUsePixelMaskString,   asynParamInt32,  &SDUsePixelMask);
+    createParam(SDUseAngularConvString, asynParamInt32,  &SDUseAngularConv);
+    createParam(SDUseDataCallbackString,asynParamInt32,  &SDUseDataCallback);
+    createParam(SDBitDepthString,       asynParamInt32,  &SDBitDepth);
+    createParam(SDNumGatesString,       asynParamInt32,  &SDNumGates);
+    createParam(SDNumCyclesString,      asynParamInt32,  &SDNumCycles);
+    createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames);
+    createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode);
     createParam(SDRecvModeString,       asynParamInt32,  &SDRecvMode);
+    createParam(SDRecvStreamString,     asynParamInt32,  &SDRecvStream);
     createParam(SDHighVoltageString,    asynParamInt32,  &SDHighVoltage);
-    createParam(SDCommandString,        asynParamOctet,  &SDCommand); 
-    createParam(SDReplyString,          asynParamOctet,  &SDReply); 
-    createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile); 
-    createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup); 
-    createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup); 
+    createParam(SDCommandString,        asynParamOctet,  &SDCommand);
+    createParam(SDReplyString,          asynParamOctet,  &SDReply);
+    createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile);
+    createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup);
+    createParam(SDSaveSetupString,      asynParamInt32,  &SDSaveSetup);
 
     /* Connect to camserver */
-    pDetector = new slsDetectorUsers(detectorId); 
+    pDetector = new slsDetectorUsers(detectorId);
     if (pDetector->readConfigurationFile(configFileName) != 0) {
-        status = asynError; 
-        printf("%s:%s: ERROR: slsDetectorDriver::readConfigurationFile %s failed, status=%d\n", 
+        status = asynError;
+        printf("%s:%s: ERROR: slsDetectorDriver::readConfigurationFile %s failed, status=%d\n",
             driverName, functionName, configFileName, status);
     }
 
     /* Set some default values for parameters */
-    status |= setIntegerParam(SDOnline, pDetector->setOnline(1)); 
+    status |= setIntegerParam(SDOnline, pDetector->setOnline(1));
 
     status =  setStringParam (ADManufacturer, pDetector->getDetectorDeveloper().c_str());
     status |= setStringParam (ADModel,        pDetector->getDetectorType().c_str());
 
-    int sensorSizeX,  sensorSizeY; 
+    int sensorSizeX,  sensorSizeY;
     pDetector->getMaximumDetectorSize(sensorSizeX, sensorSizeY);
     status |= setIntegerParam(ADMaxSizeX, sensorSizeX);
     status |= setIntegerParam(ADMaxSizeY, sensorSizeY);
 
-    int minX,  minY, sizeX, sizeY; 
-    pDetector->getDetectorSize(minX, minY, sizeX, sizeY); 
+    int minX,  minY, sizeX, sizeY;
+    pDetector->getDetectorSize(minX, minY, sizeX, sizeY);
     status |= setIntegerParam(ADMinX,  minX);
     status |= setIntegerParam(ADMinY,  minY);
     status |= setIntegerParam(ADSizeX, sizeX);
@@ -744,15 +749,15 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     status |= setIntegerParam(ADImageMode, ADImageSingle);
 
-    /* NOTE: these char type waveform record could not be initialized in iocInit 
+    /* NOTE: these char type waveform record could not be initialized in iocInit
      * Instead use autosave to restore their values.
      * It is left here only for references.
      * */
-    status |= setStringParam(NDFilePath,       pDetector->getFilePath().c_str()); 
-    status |= setStringParam(NDFileName,       pDetector->getFileName().c_str()); 
+    status |= setStringParam(NDFilePath,       pDetector->getFilePath().c_str());
+    status |= setStringParam(NDFileName,       pDetector->getFileName().c_str());
 
-    status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionDir().c_str()); 
-    status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionFile().c_str()); 
+    status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionDir().c_str());
+    status |= setStringParam(SDFlatFieldPath,  pDetector->getFlatFieldCorrectionFile().c_str());
 
     status |= setIntegerParam(SDUseFlatField,  pDetector->enableFlatFieldCorrection());
     status |= setIntegerParam(SDUseCountRate,  pDetector->enableCountRateCorrection());
@@ -770,19 +775,15 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
         return;
     }
 
-    /* Enable data streaming */
-    if (pDetector->enableDataStreamingFromReceiver(-1) == 0 && pDetector->enableDataStreamingFromReceiver(1) == 0)
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-        "%s:%s: no data streaming is available\n", driverName, functionName);
     /* Register data callback function */
     pDetector->registerDataCallback(dataCallbackC,  (void *)this);
-    /* Register acquisition finsihed callback function 
-     * A dummy callback is used only to trick slsDetector library to send us every nth frame 
+    /* Register acquisition finsihed callback function
+     * A dummy callback is used only to trick slsDetector library to send us every nth frame
      * */
     pDetector->registerAcquisitionFinishedCallback(dummyFinishedCallbackC,  (void *)this);
 
     /* Register the shutdown function for epicsAtExit */
-    epicsAtExit(c_shutdown, (void*)this); 
+    epicsAtExit(c_shutdown, (void*)this);
 
     /* Create the thread that runs acquisition */
     status = (epicsThreadCreate("acquisitionTask",
@@ -795,7 +796,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 /* Code for iocsh registration */
 static const iocshArg slsDetectorConfigArg0 = {"Port name", iocshArgString};
 static const iocshArg slsDetectorConfigArg1 = {"config file name", iocshArgString};
-static const iocshArg slsDetectorConfigArg2 = {"detector index", iocshArgInt}; 
+static const iocshArg slsDetectorConfigArg2 = {"detector index", iocshArgInt};
 static const iocshArg slsDetectorConfigArg3 = {"maxBuffers", iocshArgInt};
 static const iocshArg slsDetectorConfigArg4 = {"maxMemory", iocshArgInt};
 static const iocshArg slsDetectorConfigArg5 = {"priority", iocshArgInt};
@@ -805,7 +806,7 @@ static const iocshArg * const slsDetectorConfigArgs[] =  {&slsDetectorConfigArg0
                                                               &slsDetectorConfigArg2,
                                                               &slsDetectorConfigArg3,
                                                               &slsDetectorConfigArg4,
-                                                              &slsDetectorConfigArg5, 
+                                                              &slsDetectorConfigArg5,
                                                               &slsDetectorConfigArg6};
 static const iocshFuncDef configSlsDetector = {"slsDetectorConfig", 7, slsDetectorConfigArgs};
 static void configSlsDetectorCallFunc(const iocshArgBuf *args)
