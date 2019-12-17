@@ -358,6 +358,8 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
             char *str, *token, *saveptr;
             char *argv[MAX_COMMAND_ARG];
             int argc = 0;
+            int pos = -1;
+            size_t n = 0;
             for(str=output; ;str=NULL) {
                 token = epicsStrtok_r(str, " ", &saveptr);
                 if (token == NULL)
@@ -367,6 +369,11 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
                     "%s:%s: Command has more than %d parameters: %s\n", driverName, functionName, MAX_COMMAND_ARG, value);
                     break;
                 }
+                /* extract module number (0:) from the second argument */
+                if (argc == 1 && (n = strspn(token, "1234567890")) && token[n] == ':') {
+                    pos = atoi(token);
+                    token += n + 1;
+                }
                 argv[argc++] = token;
             }
             std::string reply;
@@ -374,9 +381,9 @@ asynStatus slsDetectorDriver::writeOctet(asynUser *pasynUser, const char *value,
                 char **params = argv + 1;
                 int num = argc - 1;
                 if (epicsStrCaseCmp(argv[0], "get") == 0)
-                    reply = pDetector->getCommand(num, params);
+                    reply = pDetector->getCommand(num, params, pos);
                 else if (epicsStrCaseCmp(argv[0], "put") == 0)
-                    reply = pDetector->putCommand(num, params);
+                    reply = pDetector->putCommand(num, params, pos);
                 else
                     asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
                     "%s:%s: Command type is neither \"put\" nor \"get\": %s\n", driverName, functionName, argv[0]);
