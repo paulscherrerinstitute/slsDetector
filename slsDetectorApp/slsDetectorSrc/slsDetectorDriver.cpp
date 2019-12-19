@@ -506,6 +506,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         if (pDetector->enableDataStreamingToClient(-1) != value) {
             retVal = pDetector->enableDataStreamingToClient(value);
             status |= setIntegerParam(SDUseDataCallback, retVal);
+            status |= setIntegerParam(SDRecvStream, pDetector->enableDataStreamingFromReceiver(-1));
         }
     } else if (function == SDBitDepth) {
         retVal = pDetector->setBitDepth(value);
