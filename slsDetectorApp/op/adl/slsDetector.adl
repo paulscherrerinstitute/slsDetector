@@ -1,14 +1,14 @@
 
 file {
-	name="slsDetector.adl"
+	name="/afs/psi.ch/user/w/wang_x1/xxx/G/DRV/slsDetector/slsDetectorApp/op/adl/slsDetector.adl"
 	version=030105
 }
 display {
 	object {
-		x=23
-		y=106
+		x=-1
+		y=37
 		width=1290
-		height=670
+		height=690
 	}
 	clr=14
 	bclr=4
@@ -147,7 +147,7 @@ rectangle {
 		x=5
 		y=340
 		width=350
-		height=324
+		height=345
 	}
 	"basic attribute" {
 		clr=14
@@ -286,7 +286,7 @@ rectangle {
 		x=363
 		y=207
 		width=350
-		height=433
+		height=477
 	}
 	"basic attribute" {
 		clr=14
@@ -417,7 +417,7 @@ composite {
 composite {
 	object {
 		x=469
-		y=506
+		y=558
 		width=201
 		height=40
 	}
@@ -426,7 +426,7 @@ composite {
 		text {
 			object {
 				x=587
-				y=506
+				y=558
 				width=40
 				height=20
 			}
@@ -444,7 +444,7 @@ composite {
 		text {
 			object {
 				x=558
-				y=506
+				y=558
 				width=100
 				height=20
 			}
@@ -462,7 +462,7 @@ composite {
 		"message button" {
 			object {
 				x=544
-				y=526
+				y=578
 				width=59
 				height=20
 			}
@@ -477,7 +477,7 @@ composite {
 		"message button" {
 			object {
 				x=611
-				y=526
+				y=578
 				width=59
 				height=20
 			}
@@ -492,7 +492,7 @@ composite {
 		text {
 			object {
 				x=469
-				y=526
+				y=578
 				width=70
 				height=20
 			}
@@ -507,7 +507,7 @@ composite {
 composite {
 	object {
 		x=409
-		y=556
+		y=608
 		width=280
 		height=20
 	}
@@ -516,7 +516,7 @@ composite {
 		"text entry" {
 			object {
 				x=544
-				y=556
+				y=608
 				width=60
 				height=20
 			}
@@ -531,7 +531,7 @@ composite {
 		text {
 			object {
 				x=409
-				y=556
+				y=608
 				width=130
 				height=20
 			}
@@ -544,7 +544,7 @@ composite {
 		"text update" {
 			object {
 				x=609
-				y=557
+				y=609
 				width=80
 				height=18
 			}
@@ -561,7 +561,7 @@ composite {
 composite {
 	object {
 		x=369
-		y=606
+		y=658
 		width=330
 		height=20
 	}
@@ -570,7 +570,7 @@ composite {
 		text {
 			object {
 				x=369
-				y=606
+				y=658
 				width=150
 				height=20
 			}
@@ -583,7 +583,7 @@ composite {
 		menu {
 			object {
 				x=524
-				y=606
+				y=658
 				width=90
 				height=20
 			}
@@ -596,7 +596,7 @@ composite {
 		"text update" {
 			object {
 				x=619
-				y=608
+				y=660
 				width=80
 				height=18
 			}
@@ -615,7 +615,7 @@ composite {
 composite {
 	object {
 		x=439
-		y=581
+		y=633
 		width=205
 		height=20
 	}
@@ -624,7 +624,7 @@ composite {
 		text {
 			object {
 				x=439
-				y=581
+				y=633
 				width=100
 				height=20
 			}
@@ -637,7 +637,7 @@ composite {
 		"text update" {
 			object {
 				x=544
-				y=582
+				y=634
 				width=100
 				height=18
 			}
@@ -1607,7 +1607,7 @@ text {
 "text update" {
 	object {
 		x=555
-		y=483
+		y=539
 		width=143
 		height=18
 	}
@@ -1790,7 +1790,7 @@ text {
 text {
 	object {
 		x=380
-		y=480
+		y=538
 		width=160
 		height=20
 	}
@@ -2104,7 +2104,7 @@ composite {
 composite {
 	object {
 		x=405
-		y=415
+		y=449
 		width=280
 		height=20
 	}
@@ -2113,7 +2113,7 @@ composite {
 		"text entry" {
 			object {
 				x=540
-				y=415
+				y=449
 				width=60
 				height=20
 			}
@@ -2128,7 +2128,7 @@ composite {
 		"text update" {
 			object {
 				x=605
-				y=417
+				y=451
 				width=80
 				height=18
 			}
@@ -2143,7 +2143,7 @@ composite {
 		text {
 			object {
 				x=405
-				y=415
+				y=449
 				width=130
 				height=20
 			}
@@ -2158,7 +2158,7 @@ composite {
 composite {
 	object {
 		x=372
-		y=441
+		y=409
 		width=333
 		height=21
 	}
@@ -2167,7 +2167,7 @@ composite {
 		text {
 			object {
 				x=372
-				y=441
+				y=409
 				width=120
 				height=20
 			}
@@ -2180,7 +2180,7 @@ composite {
 		menu {
 			object {
 				x=498
-				y=442
+				y=410
 				width=100
 				height=20
 			}
@@ -2193,7 +2193,7 @@ composite {
 		"text update" {
 			object {
 				x=605
-				y=442
+				y=410
 				width=100
 				height=18
 			}
@@ -2202,6 +2202,188 @@ composite {
 				clr=54
 				bclr=4
 			}
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=-3
+		y=658
+		width=140
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="High voltage:"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=143
+		y=659
+		width=90
+		height=20
+	}
+	control {
+		chan="$(P)$(R)HighVoltage"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=240
+		y=659
+		width=90
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)HighVoltage_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+polyline {
+	object {
+		x=379
+		y=439
+		width=312
+		height=0
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	points {
+		(379,439)
+		(691,439)
+	}
+}
+polyline {
+	object {
+		x=379
+		y=529
+		width=312
+		height=0
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	points {
+		(379,529)
+		(691,529)
+	}
+}
+composite {
+	object {
+		x=379
+		y=501
+		width=321
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=379
+				y=501
+				width=150
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Data callback"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=540
+				y=501
+				width=70
+				height=20
+			}
+			control {
+				chan="$(P)$(R)UseDataCallback"
+				clr=14
+				bclr=51
+			}
+		}
+		"text update" {
+			object {
+				x=620
+				y=502
+				width=80
+				height=18
+			}
+			monitor {
+				chan="$(P)$(R)UseDataCallback_RBV"
+				clr=54
+				bclr=4
+			}
+			align="horiz. centered"
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=379
+		y=475
+		width=321
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=379
+				y=475
+				width=150
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Receiver stream"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=540
+				y=475
+				width=70
+				height=20
+			}
+			control {
+				chan="$(P)$(R)ReceiverStream"
+				clr=14
+				bclr=51
+			}
+		}
+		"text update" {
+			object {
+				x=620
+				y=476
+				width=80
+				height=18
+			}
+			monitor {
+				chan="$(P)$(R)ReceiverStream_RBV"
+				clr=54
+				bclr=4
+			}
+			align="horiz. centered"
 			limits {
 			}
 		}
