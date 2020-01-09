@@ -47,6 +47,7 @@ static const char *driverName = "slsDetectorDriver";
 #define SDNumCyclesString       "SD_NUM_CYCLES"
 #define SDNumFramesString       "SD_NUM_FRAMES"
 #define SDTimingModeString      "SD_TMODE"
+#define SDTriggerSoftwareString "SD_TRIGGER_SOFTWARE"
 #define SDRecvModeString        "SD_RECV_MODE"
 #define SDRecvStreamString      "SD_RECV_STREAM"
 #define SDHighVoltageString     "SD_HIGH_VOLTAGE"
@@ -94,6 +95,7 @@ public:
     int SDNumCycles;
     int SDNumFrames;
     int SDTimingMode;
+    int SDTriggerSoftware;
     int SDRecvMode;
     int SDRecvStream;
     int SDHighVoltage;
@@ -523,6 +525,8 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == SDTimingMode) {
         retVal = pDetector->setTimingMode(value);
         status |= setIntegerParam(SDTimingMode, retVal);
+    } else if (function == SDTriggerSoftware) {
+        retVal = pDetector->sendSoftwareTrigger();
     } else if (function == SDLoadSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
         if (pDetector->retrieveDetectorSetup(filePath) != 0)
@@ -723,6 +727,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDNumCyclesString,      asynParamInt32,  &SDNumCycles);
     createParam(SDNumFramesString,      asynParamInt32,  &SDNumFrames);
     createParam(SDTimingModeString,     asynParamInt32,  &SDTimingMode);
+    createParam(SDTriggerSoftwareString,asynParamInt32,  &SDTriggerSoftware);
     createParam(SDRecvModeString,       asynParamInt32,  &SDRecvMode);
     createParam(SDRecvStreamString,     asynParamInt32,  &SDRecvStream);
     createParam(SDHighVoltageString,    asynParamInt32,  &SDHighVoltage);

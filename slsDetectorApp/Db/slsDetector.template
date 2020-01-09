@@ -454,6 +454,16 @@ record (mbbi, "$(P)$(R)TimingMode_RBV")
     field (SCAN, "I/O Intr")
 }
 #----------------------------------
+# Software trigger
+#----------------------------------
+record(bo, "$(P)$(R)TriggerSoftware")
+{
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_TRIGGER_SOFTWARE")
+    field (ZNAM, "Off")
+    field (ONAM, "On")
+}
+#----------------------------------
 # Receiver callback frequency
 #----------------------------------
 record (longout, "$(P)$(R)ReceiverMode")
