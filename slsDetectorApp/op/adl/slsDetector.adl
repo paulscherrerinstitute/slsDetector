@@ -127,7 +127,7 @@ composite {
 		x=5
 		y=35
 		width=350
-		height=340
+		height=215
 	}
 	"composite name"=""
 	"composite file"="ADSetup.adl"
@@ -802,58 +802,47 @@ text {
 	limits {
 	}
 }
-composite {
+text {
 	object {
 		x=768
+		y=417
+		width=112
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Next file #"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=890
 		y=416
-		width=270
+		width=61
 		height=22
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=768
-				y=417
-				width=112
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Next file #"
-			align="horiz. right"
-		}
-		"text entry" {
-			object {
-				x=890
-				y=416
-				width=61
-				height=22
-			}
-			control {
-				chan="$(P)$(R)FileNumber"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=956
-				y=418
-				width=82
-				height=18
-			}
-			monitor {
-				chan="$(P)$(R)FileNumber_RBV"
-				clr=54
-				bclr=4
-			}
-			limits {
-			}
-		}
+	control {
+		chan="$(P)$(R)FileNumber"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=956
+		y=418
+		width=82
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)FileNumber_RBV"
+		clr=54
+		bclr=4
+	}
+	limits {
 	}
 }
 text {
@@ -869,47 +858,36 @@ text {
 	textix="File name"
 	align="horiz. right"
 }
-composite {
+"text entry" {
+	object {
+		x=889
+		y=391
+		width=370
+		height=20
+	}
+	control {
+		chan="$(P)$(R)FileName"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
+	}
+}
+"text update" {
 	object {
 		x=889
 		y=368
 		width=370
-		height=43
+		height=18
 	}
-	"composite name"=""
-	children {
-		"text entry" {
-			object {
-				x=889
-				y=391
-				width=370
-				height=20
-			}
-			control {
-				chan="$(P)$(R)FileName"
-				clr=14
-				bclr=51
-			}
-			format="string"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=889
-				y=368
-				width=370
-				height=18
-			}
-			monitor {
-				chan="$(P)$(R)FileName_RBV"
-				clr=54
-				bclr=4
-			}
-			format="string"
-			limits {
-			}
-		}
+	monitor {
+		chan="$(P)$(R)FileName_RBV"
+		clr=54
+		bclr=4
+	}
+	format="string"
+	limits {
 	}
 }
 "text entry" {
