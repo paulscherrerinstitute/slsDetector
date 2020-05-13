@@ -81,6 +81,9 @@ Configuration
 Release Notes
 -------------
 
+* 4.1.2 - 13.05.2020
+  1. libSlsDetector updated to 4.1.1 with zmq statically builtin.
+
 * 1.2 - 08.08.2014
   
   1. libSlsDetector updated.
