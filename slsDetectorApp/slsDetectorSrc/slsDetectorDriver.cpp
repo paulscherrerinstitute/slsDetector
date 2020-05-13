@@ -187,6 +187,7 @@ void slsDetectorDriver::acquisitionTask()
         callParamCallbacks();
 
         /* Start acquisition,  this is a blocking function */
+        setShutter(1);
         this->unlock();
         pDetector->startMeasurement();
         this->lock();
@@ -207,6 +208,7 @@ void slsDetectorDriver::acquisitionTask()
 
         getIntegerParam(ADImageMode, &imageMode);
         if (imageMode == ADImageSingle || imageMode == ADImageMultiple) {
+            setShutter(0);
             setIntegerParam(ADAcquire,  0);
             callParamCallbacks();
         }
@@ -436,7 +438,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     /* Reject any call to the detector if it is running */
     int acquire;
     getIntegerParam(ADAcquire, &acquire);
-    if (function != ADAcquire && acquire == 1) {
+    if ((function != ADAcquire && function != SDTriggerSoftware) && acquire == 1) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
         "%s:%s: detector is busy\n", driverName, functionName);
         return asynError;
@@ -506,9 +508,11 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         status |= setIntegerParam(SDUseAngularConv,retVal);
     } else if (function == SDUseDataCallback) {
         if (pDetector->enableDataStreamingToClient(-1) != value) {
-            retVal = pDetector->enableDataStreamingToClient(value);
-            status |= setIntegerParam(SDUseDataCallback, retVal);
-            status |= setIntegerParam(SDRecvStream, pDetector->enableDataStreamingFromReceiver(-1));
+            if (value)
+                pDetector->registerDataCallback(dataCallbackC,  (void *)this);
+            else
+                pDetector->registerDataCallback(NULL,  (void *)this);
+            status |= setIntegerParam(SDUseDataCallback, pDetector->enableDataStreamingToClient(-1));
         }
     } else if (function == SDBitDepth) {
         retVal = pDetector->setBitDepth(value);
@@ -566,8 +570,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         status |= setIntegerParam(SDRecvMode, recvMode);
     } else if (function == SDRecvStream) {
         if (pDetector->enableDataStreamingFromReceiver(-1) != value) {
-            int recvStream = pDetector->enableDataStreamingFromReceiver(value);
-            status |= setIntegerParam(SDRecvStream, recvStream);
+            status |= setIntegerParam(SDRecvStream, pDetector->enableDataStreamingFromReceiver(value));
         }
     } else if (function == SDHighVoltage) {
         pDetector->setHighVoltage(value);
@@ -796,6 +799,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     /* Register data callback function */
     pDetector->registerDataCallback(dataCallbackC,  (void *)this);
+    status |= setIntegerParam(SDUseDataCallback, pDetector->enableDataStreamingToClient(-1));
+    status |= setIntegerParam(SDRecvStream, pDetector->enableDataStreamingFromReceiver(1));
     /* Register acquisition finsihed callback function
      * A dummy callback is used only to trick slsDetector library to send us every nth frame
      * */
