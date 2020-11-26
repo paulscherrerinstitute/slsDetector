@@ -19,10 +19,6 @@ ADManufacturer            $(P)$(R)Manufacturer        Detector manuafacturer, ei
 ADModel                   $(P)$(R)Model               Detector type, Mythen, Eiger
 ADMaxSizeX                $(P)$(R)SizeX               Detector maximum size in X
 ADMaxSizeY                $(P)$(R)SizeY               Detector maximum size in Y
-ADMinX                    $(P)$(R)MinX                First pixel to read in the X direction.
-ADMinX                    $(P)$(R)MinY                First pixel to read in theY direction.
-ADSizeX                   $(P)$(R)SizeX               DetectorDetector size in X
-ADSizeY                   $(P)$(R)SizeY               DetectorDetector size in Y Depending on the hardware, the actual setting maybe rounded to the closest module.
 ADAcquireTime             $(P)$(R)AcquireTime         Exposure time measured in in seconds
 ADAcquirePeriod           $(P)$(R)AcquirePeriod       Exposure period in case of multiple images measured in seconds
 ADTemperatureActual       $(P)$(R)TemperatureActual   Detector fpga temperature
@@ -39,28 +35,46 @@ slsDetector specific parameters
 ========================  ============== ====== ===================  =======================   ============
 Parameter index variable  asyn interface Access drvInfo string       EPICS record name         Description
 ========================  ============== ====== ===================  =======================   ============
+DetectorType              asynInt32      r/o    SD_DETECTOR_TYPE     $(P)$(R)DetectorType_RBV  Detector type enum
 SDSetting                 asynInt32      r/w    SD_SETTING           $(P)$(R)Setting           Detector settings
-SDThreshold               asynInt32      r/w    SD_THRESHOLD         $(P)$(R)ThresholdEnergy   Threshold energy in eV
-SDEnergy                  asynInt32      r/w    SD_ENERGY            $(P)$(R)BeamEnergy        Beam energy in eV. Threshold energy will change to be half of the beam energy.
-SDOnline                  asynInt32      r/w    SD_ONLINE            $(P)$(R)Online            Detector online control
-SDFlatFieldPath           asynOctet      r/w    SD_FLATFIELD_PATH    $(P)$(R)FlatFieldPath     File path and name of a file to correct for the flat field.
-SDFlatFieldFile           asynOctet      r/w    SD_FLATFIELD_FILE    $(P)$(R)FlatFieldFile
-SDUseFlatField            asynInt32      r/w    SD_USE_FLATFIELD     $(P)$(R)UseFlatField      Enable flat field correction
-SDUseCountRate            asynInt32      r/w    SD_USE_COUNTRATE     $(P)$(R)UseCountRate      Enable count rate correction
-SDUsePixelMask            asynInt32      r/w    SD_USE_PIXELMASK     $(P)$(R)UsePixelMask      Enable pixel mask correction
-SDUseAngularConv          asynInt32      r/w    SD_USE_ANGULAR_CONV  $(P)$(R)UseAngularConv    Enable angular conversion       
 SDBitDepth                asynInt32      r/w    SD_BIT_DEPTH         $(P)$(R)BitDepth          Dynamic range
-SDTimingMode              asynInt32      r/w    SD_TMODE             $(P)$(R)TimingMode        External signal communication mode, triggering, gating 
+SDTimingMode              asynInt32      r/w    SD_TMODE             $(P)$(R)TimingMode        External signal communication mode, triggering, gating
+SDTriggerSoftware         asynInt32      r/w    SD_TRIGGER_SOFTWARE  $(P)$(R)TriggerSoftware   Send software trigger
 SDDelayTime               asynFloat64    r/w    SD_DELAY_TIME        $(P)$(R)DelayTime         Delay in seconds between external trigger and the start of image acquisition
 SDRecvMode                asynInt32      r/w    SD_RECV_MODE         $(P)$(R)ReceiverMode      Receiver data callback frequency
+SDRecvStream              asynInt32      r/w    SD_RECV_STREAM       $(P)$(R)ReceiverStream    Enable/disable receiver stream
+SDRecvStatus              asynInt32      r/o    SD_RECV_STATUS       $(P)$(R)ReceiverState_RBV Receiver status
+SDRecvMissed              asynInt32      r/o    SD_RECV_MISSED       $(P)$(R)ReceiverMissedPackets_RBV Number of packets missed
 SDHighVoltage             asynInt32      r/w    SD_HIGH_VOLTAGE      $(P)$(R)HighVoltage       Detector high voltage
-SDNumGates                asynInt32      r/w    SD_NGATES            $(P)$(R)NumGates          Number of gates if timing mode is gating        
-SDNumCycles               asynInt32      r/w    SD_NCYCLES           $(P)$(R)NumCycles         Number of triggeres     
-SDNumFrames               asynInt32      r/w    SD_NFRAMES           $(P)$(R)NumFrames         Number of frames to acquire for each trigger    
-SDSetupFile               asynOctet      r/w    SD_SETUP_FILE        $(P)$(R)SetupFile         Detector setup from file        
-SDLoadSetup               asynInt32      r/w    SD_LOAD_SETUP        $(P)$(R)LoadSetup         Load detector setup from file   
-SDSaveSetup               asynInt32      r/w    SD_SAVE_SETUP        $(P)$(R)SaveSetup         Save detector setup to file     
+SDNumCycles               asynInt32      r/w    SD_NCYCLES           $(P)$(R)NumCycles         Number of triggeres
+SDNumFrames               asynInt32      r/w    SD_NFRAMES           $(P)$(R)NumFrames         Number of frames to acquire for each trigger
+SDSetupFile               asynOctet      r/w    SD_SETUP_FILE        $(P)$(R)SetupFile         Detector setup from file
+SDLoadSetup               asynInt32      r/w    SD_LOAD_SETUP        $(P)$(R)LoadSetup         Load detector setup from file
+SDCommand                 asynOctet      r/w    SD_COMMAND           $(P)$(R)Command           Direct command to detector
+SDUseDataCallback         asynInt32      r/w    SD_USE_DATA_CALLBACK $(R)$(R)UseDataCallback   Enable disable client data callback
 ========================  ============== ====== ===================  =======================   ============
+
+Eiger specific
+
+========================  ============== ====== ===================  =======================   ============
+Parameter index variable  asyn interface Access drvInfo string       EPICS record name         Description
+========================  ============== ====== ===================  =======================   ============
+SDThreshold               asynInt32      r/w    SD_THRESHOLD         $(P)$(R)ThresholdEnergy   Threshold energy in eV
+SDEnergy                  asynInt32      r/w    SD_ENERGY            $(P)$(R)BeamEnergy        Beam energy in eV. Threshold energy will change to be half of the beam energy.
+SDTrimbits                asynInt32      r/w    SD_TRIMBITS          $(P)$(R)Trimbits          Whether loading trimbits from settings
+========================  ============== ====== ===================  =======================   ============
+
+Mythen3 specific
+
+========================  ==============     ====== ====================  =======================   ============
+Parameter index variable  asyn interface     Access drvInfo string        EPICS record name         Description
+========================  ==============     ====== ====================  =======================   ============
+SDNumGates                asynInt32          r/w    SD_NGATES             $(P)$(R)NumGates          Number of gates if timing mode is gating
+SDCounterMask             asynUInt32Digital  r/w    SD_COUNTER_MASK       $(P)$(R)CounterMask       Mask of counters used
+SDGate\ *n*\ Delay        asynFloat64        r/w    SD_GATE\ *n*\ _DELAY  $(P)$(R)Gate\ *n*\ Delay  Gate\ *n* delay in seconds
+SDGate\ *n*\ Width        asynFloat64        r/w    SD_GATE\ *n*\ _WIDTH  $(P)$(R)Gate\ *n*\ Width  Gate\ *n* width in seconds
+========================  ==============     ====== ====================  =======================   ============
+
 
 Configuration
 -------------
@@ -71,6 +85,7 @@ Configuration
     #               portName,       # The name of the asyn port driver to be created.
     #               configFileName, # The configuration file to the detector.
     #               detectorId,     # The detector index number running on the same system.
+    #               numModules,     # The number of modules for a multi-module detector.
     #               maxBuffers,     # The maximum number of NDArray buffers that the NDArrayPool for this driver is 
     #                                 allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
     #               maxMemory)      # The maximum amount of memory that the NDArrayPool for this driver is 
@@ -80,6 +95,8 @@ Configuration
 
 Release Notes
 -------------
+* 5.0.0 - 30.11.2020
+  1. slsDetector library updated to 5.0.1
 
 * 4.1.2 - 13.05.2020
   1. libSlsDetector updated to 4.1.1 with zmq statically builtin.

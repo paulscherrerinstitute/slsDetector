@@ -1,10 +1,10 @@
 include /ioc/tools/driver.makefile
 PROJECT=slsDetector
-EXCLUDE_VERSIONS=3.13 3.14.8
+EXCLUDE_VERSIONS=3.13 3.14
 BUILDCLASSES=Linux
-CROSS_COMPILER_TARGET_ARCHS=$(EPICS_HOST_ARCH)
+ARCH_FILTER=$(EPICS_HOST_ARCH)
 
-LIBVERSION=v4.1.2
+LIBVERSION=v5.0.1
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
@@ -12,10 +12,12 @@ DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
 # convert SL6-x86_64 to linux-x86_64
 ARCH=linux-$(word 2,$(subst -, , $(EPICS_HOST_ARCH)))
 USR_INCLUDES += -I../../slsDetectorApp/slsDetectorSupport
+USR_CXXFLAGS += -std=c++11
 USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
-USR_LIBS += SlsDetector
+USR_LIBS += SlsDetector SlsSupport
 
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so
 SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so
 
 TEMPLATES += ../slsDetectorApp/Db/slsDetector.template

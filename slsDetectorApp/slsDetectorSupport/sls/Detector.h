@@ -1,0 +1,1713 @@
+#pragma once
+#include "sls/Result.h"
+#include "sls/network_utils.h"
+#include "sls/sls_detector_defs.h"
+#include <chrono>
+#include <map>
+#include <memory>
+#include <vector>
+
+class detectorData;
+
+namespace sls {
+using ns = std::chrono::nanoseconds;
+class DetectorImpl;
+class MacAddr;
+class IpAddr;
+
+// Free function to avoid dependence on class
+// and avoid the option to free another objects
+// shm by mistake
+void freeSharedMemory(int multiId, int detPos = -1);
+
+/**
+ * \class Detector
+ */
+class Detector {
+    std::unique_ptr<DetectorImpl> pimpl;
+
+  public:
+    /**
+     * @param shm_id detector shared memory id
+     * Default value is 0. Can be set to more values for
+     * multiple detectors.It is important only if you
+     * are controlling multiple detectors from the same pc.
+     */
+    Detector(int shm_id = 0);
+    ~Detector();
+    /** @name Configuration */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Configuration                               *
+     *                                                *
+     * ************************************************/
+
+    /** Free the shared memory of this detector and all modules
+    belonging to it */
+    void freeSharedMemory();
+
+    /** Frees shared memory before loading configuration file. Set up once
+    normally */
+    void loadConfig(const std::string &fname);
+
+    /** Shared memory not freed prior. Set up per measurement. */
+    void loadParameters(const std::string &fname);
+
+    void loadParameters(const std::vector<std::string> &parameters);
+
+    Result<std::string> getHostname(Positions pos = {}) const;
+
+    /**Frees shared memory, adds detectors to the list. */
+    void setHostname(const std::vector<std::string> &hostname);
+
+    /** connects to n servers at local host starting at specific control port.
+     * Every virtual server will have a stop port (control port + 1) */
+    void setVirtualDetectorServers(int numServers, int startingPort);
+
+    /** Gets shared memory ID */
+    int getShmId() const;
+
+    /** package git branch */
+    std::string getPackageVersion() const;
+
+    int64_t getClientVersion() const;
+
+    Result<int64_t> getFirmwareVersion(Positions pos = {}) const;
+
+    Result<int64_t> getDetectorServerVersion(Positions pos = {}) const;
+
+    Result<int64_t> getSerialNumber(Positions pos = {}) const;
+
+    Result<int64_t> getReceiverVersion(Positions pos = {}) const;
+
+    /** Options: EIGER, JUNGFRAU, GOTTHARD, MOENCH, MYTHEN3, GOTTHARD2,
+     * CHIPTESTBOARD */
+    Result<defs::detectorType> getDetectorType(Positions pos = {}) const;
+
+    /** Gets the total number of modules in shared memory */
+    int size() const;
+
+    bool empty() const;
+
+    defs::xy getModuleGeometry() const;
+
+    Result<defs::xy> getModuleSize(Positions pos = {}) const;
+
+    /** Gets the actual full detector size. It is the same even if ROI changes
+     */
+    defs::xy getDetectorSize() const;
+
+    /**
+     * Sets the detector size in both dimensions (number of channels). \n
+     * This value is used to calculate row and column positions for each module
+     * and included into udp data packet header. \n By default, it adds modules
+     * in y dimension for 2d detectors and in x dimension for 1d detectors.
+     */
+    void setDetectorSize(const defs::xy value);
+
+    /** list of possible settings for this detector */
+    std::vector<defs::detectorSettings> getSettingsList() const;
+
+    /** [Jungfrau][Gotthard][Gotthard2] */
+    Result<defs::detectorSettings> getSettings(Positions pos = {}) const;
+
+    /** [Jungfrau] DYNAMICGAIN, DYNAMICHG0, FIXGAIN1, FIXGAIN2,
+     * FORCESWITCHG1, FORCESWITCHG2 \n [Gotthard] DYNAMICGAIN, HIGHGAIN,
+     * LOWGAIN, MEDIUMGAIN, VERYHIGHGAIN \n [Gotthard2] DYNAMICGAIN,
+     * FIXGAIN1, FIXGAIN2 \n [Moench] G1_HIGHGAIN, G1_LOWGAIN,
+     * G2_HIGHCAP_HIGHGAIN, G2_HIGHCAP_LOWGAIN, G2_LOWCAP_HIGHGAIN,
+     * G2_LOWCAP_LOWGAIN, G4_HIGHGAIN, G4_LOWGAIN \n [Eiger] Use threshold
+     * command. Settings loaded from file found in
+     * settingspath
+     */
+    void setSettings(defs::detectorSettings value, Positions pos = {});
+
+    /** [Eiger][Mythen3] If no extension specified, serial number of each module
+     * is attached. */
+    void loadTrimbits(const std::string &fname, Positions pos = {});
+
+    /** [Eiger][Mythen3] -1 if they are all different */
+    Result<int> getAllTrimbits(Positions pos = {}) const;
+
+    /**[Eiger][Mythen3] */
+    void setAllTrimbits(int value, Positions pos = {});
+
+    /**[Eiger][Jungfrau] */
+    bool getGapPixelsinCallback() const;
+
+    /**
+     * [Eiger][Jungfrau]
+     * Include gap pixels in client data call back. Will not be in detector
+     * streaming, receiver file or streaming. Default is disabled.
+     */
+    void setGapPixelsinCallback(const bool enable);
+
+    Result<bool> isVirtualDetectorServer(Positions pos = {}) const;
+    ///@{
+
+    /** @name Callbacks */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Callbacks                                   *
+     *                                                *
+     * ************************************************/
+
+    /** register callback for end of acquisition
+     * @param func function to be called with parameters:
+     * current progress in percentage, detector status, pArg pointer
+     * @param pArg pointer that is returned in call back
+     */
+    void registerAcquisitionFinishedCallback(void (*func)(double, int, void *),
+                                             void *pArg);
+
+    /**
+     * register callback for accessing reconstructed complete images
+     * Receiver sends out images via zmq, the client reconstructs them into
+     * complete images. Therefore, it also enables zmq streaming from receiver
+     * and the client.
+     * @param func function to be called for each image with parameters:
+     * detector data structure, frame number, sub frame number (for eiger in 32
+     * bit mode), pArg pointer
+     * @param pArg pointer that is returned in call back
+     */
+    void registerDataCallback(void (*func)(detectorData *, uint64_t, uint32_t,
+                                           void *),
+                              void *pArg);
+    ///@{
+
+    /** @name Acquisition Parameters */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Acquisition Parameters                      *
+     *                                                *
+     * ************************************************/
+
+    Result<int64_t> getNumberOfFrames(Positions pos = {}) const;
+
+    /** In trigger mode, number of frames per trigger. In scan mode, number of
+     * frames is set to number of steps \n [Gotthard2] Burst mode has a maximum
+     * of 2720 frames. */
+    void setNumberOfFrames(int64_t value);
+
+    Result<int64_t> getNumberOfTriggers(Positions pos = {}) const;
+
+    void setNumberOfTriggers(int64_t value);
+
+    /** [Gotthard][Jungfrau][Eiger][CTB][Moench][Gotthard2]  \n
+     * [Mythen3] use function with gate index **/
+    Result<ns> getExptime(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][Eiger][CTB][Moench][Gotthard2]  \n
+     * [Mythen3] sets exptime for all gate signals. To specify gate index, use
+     * function with gate index **/
+    void setExptime(ns t, Positions pos = {});
+
+    Result<ns> getPeriod(Positions pos = {}) const;
+
+    void setPeriod(ns t, Positions pos = {});
+
+    /** [Gotthard][Jungfrau][CTB][Moench][Mythen3][Gotthard2] */
+    Result<ns> getDelayAfterTrigger(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench][Mythen3][Gotthard2] */
+    void setDelayAfterTrigger(ns value, Positions pos = {});
+
+    /** [Gotthard][Jungfrau][CTB][Moench][Mythen3]
+     * [Gotthard2] only in continuous auto mode */
+    Result<int64_t> getNumberOfFramesLeft(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench][Mythen3]
+     * Only when external trigger used */
+    Result<int64_t> getNumberOfTriggersLeft(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench][Mythen3][Gotthard2]
+     * [Gotthard2] only in continuous mode */
+    Result<ns> getPeriodLeft(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench][Mythen3]
+     * [Gotthard2] only in continuous mode */
+    Result<ns> getDelayAfterTriggerLeft(Positions pos = {}) const;
+
+    Result<int> getDynamicRange(Positions pos = {}) const;
+
+    /**
+     * [Eiger] Options: 4, 8, 16, 32. If i is 32, also sets clkdivider to 2,
+     * else sets clkdivider to 1 \n [Mythen3] Options: 8, 16, 32 \n
+     * [Jungfrau][Gotthard][Ctb][Moench][Mythen3][Gotthard2] 16
+     */
+    void setDynamicRange(int value);
+
+    /** list of possible dynamic ranges for this detector */
+    std::vector<int> getDynamicRangeList() const;
+
+    Result<defs::timingMode> getTimingMode(Positions pos = {}) const;
+
+    /**
+     * [Gotthard][Jungfrau][Gotthard][CTB][Moench][Gotthard2] Options:
+     * AUTO_TIMING, TRIGGER_EXPOSURE \n
+     * [Mythen3] Options: AUTO_TIMING, TRIGGER_EXPOSURE, GATED, TRIGGER_GATED \n
+     * [Eiger] Options: AUTO_TIMING, TRIGGER_EXPOSURE, GATED, BURST_TRIGGER
+     */
+    void setTimingMode(defs::timingMode value, Positions pos = {});
+
+    /** list of possible timing modes for this detector */
+    std::vector<defs::timingMode> getTimingModeList() const;
+
+    /** [Eiger][Jungfrau] */
+    Result<defs::speedLevel> getSpeed(Positions pos = {}) const;
+
+    /** [Eiger][Jungfrau]
+     * Options: FULL_SPEED, HALF_SPEED, QUARTER_SPEED \n
+     * [Jungfrau] FULL_SPEED option only available from v2.0 boards and with
+     * setting number of interfaces to 2.  \n Also overwrites adcphase to
+     * recommended default.
+     */
+    void setSpeed(defs::speedLevel value, Positions pos = {});
+
+    /** [Jungfrau][CTB][Moench] */
+    Result<int> getADCPhase(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench]
+     * [Jungfrau] Absolute phase shift. Changing Speed also resets adcphase to
+     * recommended defaults. \n
+     * [Ctb][Moench] Absolute phase shift. Changing adcclk also resets adcphase
+     * and sets it to previous values. \n
+     * [Gotthard] Relative phase shift
+     */
+    void setADCPhase(int value, Positions pos = {});
+
+    /** [Jungfrau][CTB][Moench] */
+    Result<int> getMaxADCPhaseShift(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench] */
+    Result<int> getADCPhaseInDegrees(Positions pos = {}) const;
+
+    /** [Gotthard][Jungfrau][CTB][Moench]
+     * [Jungfrau] Absolute phase shift. Changing Speed also resets adcphase to
+     * recommended defaults. \n
+     * [Ctb][Moench] Absolute phase shift. Changing adcclk also resets adcphase
+     * and sets it to previous values. \n
+     * [Gotthard] Relative phase shift
+     */
+    void setADCPhaseInDegrees(int value, Positions pos = {});
+
+    /** [CTB][Jungfrau] */
+    Result<int> getDBITPhase(Positions pos = {}) const;
+
+    /** [CTB][Jungfrau] Absolute phase shift \n
+     * [CTB] changing dbitclk also resets dbitphase and sets to previous values.
+     */
+    void setDBITPhase(int value, Positions pos = {});
+
+    /** [CTB][Jungfrau] */
+    Result<int> getMaxDBITPhaseShift(Positions pos = {}) const;
+
+    /** [CTB][Jungfrau] */
+    Result<int> getDBITPhaseInDegrees(Positions pos = {}) const;
+
+    /** [CTB][Jungfrau] Absolute phase shift \n
+     * [CTB] changing dbitclk also resets dbitphase and sets to previous values.
+     */
+    void setDBITPhaseInDegrees(int value, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] Hz */
+    Result<int> getClockFrequency(int clkIndex, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] */
+    Result<int> getClockPhase(int clkIndex, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] absolute phase shift */
+    void setClockPhase(int clkIndex, int value, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] */
+    Result<int> getMaxClockPhaseShift(int clkIndex, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] */
+    Result<int> getClockPhaseinDegrees(int clkIndex, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] */
+    void setClockPhaseinDegrees(int clkIndex, int value, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] */
+    Result<int> getClockDivider(int clkIndex, Positions pos = {});
+
+    /** [Mythen3][Gotthard2] Must be greater than 1. */
+    void setClockDivider(int clkIndex, int value, Positions pos = {});
+
+    Result<int> getHighVoltage(Positions pos = {}) const;
+
+    /**
+     * [Gotthard] Options: 0, 90, 110, 120, 150, 180, 200
+     * [Jungfrau][CTB][Moench] Options: 0, 60 - 200
+     * [Eiger][Mythen3][Gotthard2] Options: 0 - 200
+     */
+    void setHighVoltage(int value, Positions pos = {});
+
+    /** [Jungfrau][Mythen3][Gotthard2][Moench] */
+    Result<bool> getPowerChip(Positions pos = {}) const;
+
+    /** [Jungfrau][Mythen3][Gotthard2][Moench] Power the chip. \n
+     * [Moench] Default is disabled. \n
+     * [Jungfrau] Default is disabled. Get will return power status. Can be off
+     * if temperature event occured (temperature over temp_threshold with
+     * temp_control enabled. \n [Mythen3][Gotthard2] Default is 1. If module not
+     * connected or wrong module, powerchip will fail.
+     */
+    void setPowerChip(bool on, Positions pos = {});
+
+    /** [Gotthard][Eiger virtual] */
+    Result<int> getImageTestMode(Positions pos = {});
+
+    /** [Gotthard] If 1, adds channel intensity with precalculated values.
+     * Default is 0 \n
+     * [Eiger][Jungfrau] Only for virtual servers, if 1, pixels are saturated.
+     * If 0, increasing intensity */
+    void setImageTestMode(const int value, Positions pos = {});
+
+    /** gets list of temperature indices for this detector */
+    std::vector<defs::dacIndex> getTemperatureList() const;
+
+    /**
+     * (Degrees)
+     * [Gotthard] Options: TEMPERATURE_ADC, TEMPERATURE_FPGA \n
+     * [Jungfrau] Options: TEMPERATURE_ADC, TEMPERATURE_FPGA \n
+     * [Eiger] Options: TEMPERATURE_FPGA, TEMPERATURE_FPGAEXT, TEMPERATURE_10GE,
+     * TEMPERATURE_DCDC, TEMPERATURE_SODL, TEMPERATURE_SODR, TEMPERATURE_FPGA2,
+     * TEMPERATURE_FPGA3 \n [CTB] Options: SLOW_ADC_TEMP
+     */
+    Result<int> getTemperature(defs::dacIndex index, Positions pos = {}) const;
+
+    /** gets list of dac enums for this detector */
+    std::vector<defs::dacIndex> getDacList() const;
+
+    /** [Eiger][Jungfrau][Moench][Gotthard][Gotthard2][Mythen3] */
+    void setDefaultDacs(Positions pos = {});
+
+    Result<int> getDAC(defs::dacIndex index, bool mV = false,
+                       Positions pos = {}) const;
+
+    void setDAC(defs::dacIndex index, int value, bool mV = false,
+                Positions pos = {});
+
+    /**[Gotthard2] */
+    Result<int> getOnChipDAC(defs::dacIndex index, int chipIndex,
+                             Positions pos = {}) const;
+
+    /**[Gotthard2] */
+    void setOnChipDAC(defs::dacIndex index, int chipIndex, int value,
+                      Positions pos = {});
+
+    /** [Gotthard] signal index is 0
+     * [Mythen3] signal index 0-3 for master input, 4-7 master output signals */
+    Result<defs::externalSignalFlag>
+    getExternalSignalFlags(int signalIndex, Positions pos = {}) const;
+
+    /** [Gotthard]  signal index is 0
+     * Options: TRIGGER_IN_RISING_EDGE, TRIGGER_IN_FALLING_EDGE
+     * [Mythen3] signal index 0 is master input trigger signal, 1-3 for master
+     * input gate signals, 4 is busy out signal, 5-7 is master output gate
+     * signals.
+     * Options: TRIGGER_IN_RISING_EDGE, TRIGGER_IN_FALLING_EDGE (for
+     * master input trigger only), INVERSION_ON, INVERSION_OFF */
+    void setExternalSignalFlags(int signalIndex, defs::externalSignalFlag value,
+                                Positions pos = {});
+
+    /** [Eiger][Mythen3] */
+    Result<bool> getParallelMode(Positions pos = {}) const;
+
+    /** [Eiger][Mythen3]
+     * [Mythen3] If exposure time is too short, acquisition will return with an
+     * ERROR and take fewer frames than expected */
+    void setParallelMode(bool value, Positions pos = {});
+    ///@{
+
+    /** @name Acquisition */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Acquisition                                 *
+     *                                                *
+     * ************************************************/
+    /**
+     * Blocking call: Acquire the number of frames set
+     * - sets acquiring flag
+     * - starts the receiver listener (if enabled)
+     * - starts detector acquisition for number of frames set
+     * - monitors detector status from running to idle
+     * - stops the receiver listener (if enabled)
+     * - increments file index if file write enabled
+     * - resets acquiring flag
+     * Control server is blocked and cannot accept other commands until
+     * acquisition is done.
+     */
+    void acquire();
+
+    /** If acquisition aborted during blocking acquire, use this to clear
+     * acquiring flag in shared memory before starting next acquisition */
+    void clearAcquiringFlag();
+
+    /** Non Blocking: Start receiver listener and create data file if file write
+     * enabled */
+    void startReceiver();
+
+    /** Non Blocking: Stops receiver listener for detector data packets and
+       closes current data file (if file write enabled). */
+    void stopReceiver();
+
+    /** Non blocking: start detector acquisition. Status changes to RUNNING or
+     * WAITING and automatically returns to idle at the end of acquisition. */
+    void startDetector();
+
+    /** [Mythen3] Non blocking: start detector readout of counters in chip.
+     * Status changes to TRANSMITTING and automatically returns to idle at the
+     * end of readout. */
+    void startDetectorReadout();
+
+    /** Non blocking: Abort detector acquisition. Status changes to IDLE or
+     * STOPPED. Goes to stop server. */
+    void stopDetector();
+
+    /** IDLE, ERROR, WAITING, RUN_FINISHED, TRANSMITTING, RUNNING, STOPPED \n
+     * Goes to stop server */
+    Result<defs::runStatus> getDetectorStatus(Positions pos = {}) const;
+
+    /** Options: IDLE, TRANSMITTING, RUNNING */
+    Result<defs::runStatus> getReceiverStatus(Positions pos = {}) const;
+
+    Result<int64_t> getFramesCaught(Positions pos = {}) const;
+
+    /** Gets the number of missing packets for each port in receiver. */
+    Result<std::vector<uint64_t>>
+    getNumMissingPackets(Positions pos = {}) const;
+
+    /** [Eiger][Jungfrau] */
+    Result<uint64_t> getNextFrameNumber(Positions pos = {}) const;
+
+    /** [Eiger][Jungfrau] Stopping acquisition might result in different frame
+     * numbers for different modules.*/
+    void setNextFrameNumber(uint64_t value, Positions pos = {});
+
+    /** [Eiger][Mythen3] Sends an internal software trigger to the detector */
+    void sendSoftwareTrigger(Positions pos = {});
+
+    Result<defs::scanParameters> getScan(Positions pos = {}) const;
+
+    /** enables/ disables scans for dac and trimbits \n
+     * Enabling scan sets number of frames to number of steps in
+     * receiver. \n To cancel scan configuration, set dac to '0', which also
+     * sets number of frames to 1 \n [Eiger/ Mythen3] Trimbits using
+     * TRIMBIT_SCAN*/
+    void setScan(const defs::scanParameters t);
+
+    /** Gets Scan error message if scan ended in error for non blocking
+     * acquisitions.*/
+    Result<std::string> getScanErrorMessage(Positions pos = {}) const;
+    ///@{
+
+    /** @name Network Configuration (Detector<->Receiver) */
+    ///@{
+    /**************************************************
+     *                                                 *
+     *    Network Configuration (Detector<->Receiver)  *
+     *                                                 *
+     * ************************************************/
+
+    /** [Jungfrau][Gotthard2] */
+    Result<int> getNumberofUDPInterfaces(Positions pos = {}) const;
+
+    /** [Jungfrau][Gotthard2]  Number of udp interfaces to stream data from
+     * detector. Default is 1. \n Also enables second interface in receiver for
+     * listening (Writes a file per interface if writing enabled). \n Also
+     * restarts client and receiver zmq sockets if zmq streaming enabled. \n
+     * [Gotthard2] second interface enabled to send veto information via 10Gbps
+     * for debugging. By default, if veto enabled, it is sent via 2.5 gbps
+     * interface. */
+    void setNumberofUDPInterfaces(int n, Positions pos = {});
+
+    /** [Jungfrau] */
+    Result<int> getSelectedUDPInterface(Positions pos = {}) const;
+
+    /**
+     * [Jungfrau]
+     * Effective only when number of interfaces is 1.
+     * Options: 0 (outer, default), 1(inner)] //TODO: enum?
+     */
+    void selectUDPInterface(int interface, Positions pos = {});
+
+    Result<IpAddr> getSourceUDPIP(Positions pos = {}) const;
+
+    /**For Eiger 1G, the detector will replace with its own DHCP IP
+     * 10G Eiger and other detectors. The source UDP IP must be in the
+     * same subnet of the destination UDP IP
+     */
+    void setSourceUDPIP(const IpAddr ip, Positions pos = {});
+
+    /** [Jungfrau] bottom half [Gotthard2] veto debugging */
+    Result<IpAddr> getSourceUDPIP2(Positions pos = {}) const;
+
+    /** [Jungfrau] bottom half [Gotthard2] veto debugging. \n The source UDP IP
+     * must be in the same subnet of the destination UDP IP2 */
+    void setSourceUDPIP2(const IpAddr ip, Positions pos = {});
+
+    Result<MacAddr> getSourceUDPMAC(Positions pos = {}) const;
+
+    /**For Eiger 1G, the detector will replace with its own DHCP MAC
+     * For Eiger 10G, the detector will replace with its own DHCP MAC + 1
+     * Others can be anything (beware of certain bits)
+     */
+    void setSourceUDPMAC(const MacAddr mac, Positions pos = {});
+
+    /** [Jungfrau] bottom half [Gotthard2] veto debugging */
+    Result<MacAddr> getSourceUDPMAC2(Positions pos = {}) const;
+
+    /** [Jungfrau] bottom half [Gotthard2] veto debugging */
+    void setSourceUDPMAC2(const MacAddr mac, Positions pos = {});
+
+    Result<IpAddr> getDestinationUDPIP(Positions pos = {}) const;
+
+    /** IP of the interface in receiver that the detector sends data to */
+    void setDestinationUDPIP(const IpAddr ip, Positions pos = {});
+
+    /** [Jungfrau] bottom half \n [Gotthard2] veto debugging */
+    Result<IpAddr> getDestinationUDPIP2(Positions pos = {}) const;
+
+    /** [Jungfrau] bottom half \n [Gotthard2] veto debugging */
+    void setDestinationUDPIP2(const IpAddr ip, Positions pos = {});
+
+    Result<MacAddr> getDestinationUDPMAC(Positions pos = {}) const;
+
+    /** Mac address of the receiver (destination) udp interface. Not mandatory
+     * to set as setDestinationUDPIP (udp_dstip) retrieves it from slsReceiver
+     * process but must be set if you use a custom receiver (not slsReceiver).
+     */
+    void setDestinationUDPMAC(const MacAddr mac, Positions pos = {});
+
+    /** [Jungfrau] bottom half \n [Gotthard2] veto debugging */
+    Result<MacAddr> getDestinationUDPMAC2(Positions pos = {}) const;
+
+    /* [Jungfrau][Gotthard2] Mac address of the receiver (destination) udp
+    interface 2. \n Not mandatory to set as udp_dstip2 retrieves it from
+    slsReceiver process but must be set if you use a custom receiver (not
+    slsReceiver). \n [Jungfrau] bottom half \n [Gotthard2] veto debugging \n
+    */
+    void setDestinationUDPMAC2(const MacAddr mac, Positions pos = {});
+
+    Result<int> getDestinationUDPPort(Positions pos = {}) const;
+
+    /** Default is 50001. \n If module_id is -1, ports for each module is
+     * calculated (incremented by 1 if no 2nd interface) */
+    void setDestinationUDPPort(int port, int module_id = -1);
+
+    /** [Eiger] right port[Jungfrau] bottom half [Gotthard2] veto debugging */
+    Result<int> getDestinationUDPPort2(Positions pos = {}) const;
+
+    /** [Eiger] right port[Jungfrau] bottom half [Gotthard2] veto debugging \n
+     * Default is 50002. \n If module_id is -1, ports for each module is
+     * calculated (incremented by 1 if no 2nd interface)*/
+    void setDestinationUDPPort2(int port, int module_id = -1);
+
+    /** Reconfigures Detector with UDP destination. More for debugging as the
+     * configuration is done automatically when the detector has sufficient UDP
+     * details. */
+    void reconfigureUDPDestination(Positions pos = {});
+
+    /** Validates that UDP configuration in the detector is valid. If not
+     * configured, it will throw with error message requesting missing udp
+     * information */
+    void validateUDPConfiguration(Positions pos = {});
+
+    Result<std::string> printRxConfiguration(Positions pos = {}) const;
+
+    /** [Eiger][CTB][Moench][Mythen3] */
+    Result<bool> getTenGiga(Positions pos = {}) const;
+
+    /** [Eiger][CTB][Moench][Mythen3] */
+    void setTenGiga(bool value, Positions pos = {});
+
+    /** [Eiger][Jungfrau] */
+    Result<bool> getTenGigaFlowControl(Positions pos = {}) const;
+
+    /** [Eiger][Jungfrau] */
+    void setTenGigaFlowControl(bool enable, Positions pos = {});
+
+    /** [Eiger][Jungfrau][Mythen3] */
+    Result<int> getTransmissionDelayFrame(Positions pos = {}) const;
+
+    /**
+     * Eiger][Jungfrau][Mythen3] Transmission delay of first udp packet being
+     * streamed out of the module.\n[Jungfrau] [0-31] Each value represents 1
+     * ms\n[Eiger] Additional delay to txndelay_left and txndelay_right. Each
+     * value represents 10ns. Typical value is 50000.\n[Mythen3] [0-16777215]
+     * Each value represents 8 ns (125 MHz clock), max is 134 ms.
+     */
+    void setTransmissionDelayFrame(int value, Positions pos = {});
+
+    /** [Eiger] */
+    Result<int> getTransmissionDelayLeft(Positions pos = {}) const;
+
+    /**[Eiger] Transmission delay of first packet in an image being streamed out
+     * of the module's left UDP port. Each value represents 10ns. Typical value
+     * is 50000.
+     */
+    void setTransmissionDelayLeft(int value, Positions pos = {});
+
+    /** [Eiger] Transmission delay of first packet in an image being streamed
+     * out of the module's right UDP port. Each value represents 10ns. Typical
+     * value is 50000. */
+    Result<int> getTransmissionDelayRight(Positions pos = {}) const;
+
+    /**
+     * [Eiger]
+     * Sets the transmission delay of first packet streamed ut of the right UDP
+     * port
+     */
+    void setTransmissionDelayRight(int value, Positions pos = {});
+    ///@{
+
+    /** @name Receiver Configuration */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Receiver Configuration                      *
+     *                                                *
+     * ************************************************/
+
+    /** true when slsReceiver is used */
+    Result<bool> getUseReceiverFlag(Positions pos = {}) const;
+
+    Result<std::string> getRxHostname(Positions pos = {}) const;
+
+    /**
+     * Sets receiver hostname or IP address for each module. \n Used for TCP
+     * control communication between client and receiver to configure receiver.
+     * Also updates receiver with detector parameters. \n Also resets any prior
+     * receiver property (not on detector). \n receiver is receiver hostname or
+     * IP address, can include tcp port eg. hostname:port
+     */
+    void setRxHostname(const std::string &receiver, Positions pos = {});
+
+    /** multiple rx hostnames. Single element will set it for all */
+    void setRxHostname(const std::vector<std::string> &name);
+
+    Result<int> getRxPort(Positions pos = {}) const;
+
+    /** TCP port for client-receiver communication. \n
+     *  Default is 1954. \n  Must be different if multiple receivers on same pc.
+     * \n Must be first command to set a receiver parameter to be able to
+     * communicate. \n Multi command will automatically increment port for
+     * individual modules.*/
+    void setRxPort(int port, int module_id = -1);
+
+    Result<int> getRxFifoDepth(Positions pos = {}) const;
+
+    /** Number of frames in fifo between udp listening and processing threads */
+    void setRxFifoDepth(int nframes, Positions pos = {});
+
+    Result<bool> getRxSilentMode(Positions pos = {}) const;
+
+    /** Switch on or off receiver text output during acquisition */
+    void setRxSilentMode(bool value, Positions pos = {});
+
+    Result<defs::frameDiscardPolicy>
+    getRxFrameDiscardPolicy(Positions pos = {}) const;
+
+    /**
+     * Options: NO_DISCARD, DISCARD_EMPTY_FRAMES, DISCARD_PARTIAL_FRAMES
+     * Default: NO_DISCARD
+     * discard partial frames is the fastest
+     */
+    void setRxFrameDiscardPolicy(defs::frameDiscardPolicy f,
+                                 Positions pos = {});
+
+    Result<bool> getPartialFramesPadding(Positions pos = {}) const;
+
+    /** Default: padding enabled. Disabling padding is the fastest */
+    void setPartialFramesPadding(bool value, Positions pos = {});
+
+    Result<int> getRxUDPSocketBufferSize(Positions pos = {}) const;
+
+    /** UDP socket buffer size in receiver. Tune rmem_default and rmem_max
+     * accordingly. Max value is INT_MAX/2. */
+    void setRxUDPSocketBufferSize(int udpsockbufsize, Positions pos = {});
+
+    /** TODO:
+     * Gets actual udp socket buffer size. Double the size of rx_udpsocksize due
+     * to kernel bookkeeping.
+     */
+    Result<int> getRxRealUDPSocketBufferSize(Positions pos = {}) const;
+
+    Result<bool> getRxLock(Positions pos = {});
+
+    /** Lock receiver to one client IP, 1 locks, 0 unlocks. Default is unlocked.
+     */
+    void setRxLock(bool value, Positions pos = {});
+
+    /** Client IP Address that last communicated with the receiver */
+    Result<sls::IpAddr> getRxLastClientIP(Positions pos = {}) const;
+
+    /** Get thread ids from the receiver in order of [parent, tcp, listener 0,
+     * processor 0, streamer 0, listener 1, processor 1, streamer 1]. If no
+     * streamer yet or there is no second interface, it gives 0 in its place. */
+    Result<std::array<pid_t, NUM_RX_THREAD_IDS>>
+    getRxThreadIds(Positions pos = {}) const;
+    ///@{
+
+    /** @name File */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    File                                        *
+     *                                                *
+     * ************************************************/
+    Result<defs::fileFormat> getFileFormat(Positions pos = {}) const;
+
+    /** default binary, Options: BINARY, HDF5 (library must be compiled with
+     * this option) */
+    void setFileFormat(defs::fileFormat f, Positions pos = {});
+
+    Result<std::string> getFilePath(Positions pos = {}) const;
+
+    /** Default is "/"If path does not exist, it will try to create it */
+    void setFilePath(const std::string &fpath, Positions pos = {});
+
+    Result<std::string> getFileNamePrefix(Positions pos = {}) const;
+
+    /** default run
+     * File Name: [file name prefix]_d[module index]_f[file index]_[acquisition
+     * index].[file format] eg. run_d0_f0_5.raw
+     */
+    void setFileNamePrefix(const std::string &fname, Positions pos = {});
+
+    Result<int64_t> getAcquisitionIndex(Positions pos = {}) const;
+
+    /** file or Acquisition index in receiver \n
+     * File name: [file name prefix]_d[detector index]_f[sub file
+     * index]_[acquisition/file index].[raw/h5].
+     */
+    void setAcquisitionIndex(int64_t i, Positions pos = {});
+
+    Result<bool> getFileWrite(Positions pos = {}) const;
+
+    /** default enabled */
+    void setFileWrite(bool value, Positions pos = {});
+
+    bool getMasterFileWrite() const;
+
+    /**default enabled */
+    void setMasterFileWrite(bool value);
+
+    Result<bool> getFileOverWrite(Positions pos = {}) const;
+
+    /** default overwites */
+    void setFileOverWrite(bool value, Positions pos = {});
+
+    Result<int> getFramesPerFile(Positions pos = {}) const;
+
+    /** Default depends on detector type. \n 0 will set frames per file in an
+     * acquisition to unlimited */
+    void setFramesPerFile(int n, Positions pos = {});
+    ///@{
+
+    /** @name ZMQ Streaming Parameters (Receiver<->Client) */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    ZMQ Streaming Parameters (Receiver<->Client)*
+     *                                                *
+     * ************************************************/
+    // TODO callback functions
+
+    Result<bool> getRxZmqDataStream(Positions pos = {}) const;
+
+    /** Enable/ disable data streaming from receiver via zmq (eg. to GUI or to
+     * another process for further processing). \n This creates/ destroys zmq
+     * streamer threads in receiver. \n Switching to Gui automatically enables
+     * data streaming in receiver. \n Switching back to command line or API
+     * acquire will require disabling data streaming in receiver for fast
+     * applications (if not needed for client data call backs).
+     */
+    void setRxZmqDataStream(bool value, Positions pos = {});
+
+    Result<int> getRxZmqFrequency(Positions pos = {}) const;
+
+    /** Frequency of frames streamed out from receiver via zmq. \n Default: 1,
+     * Means every frame is streamed out. \n If 2, every second frame is
+     * streamed out. \n If 0, streaming timer is the timeout, after which
+     * current frame is sent out. (default timeout is 500 ms). Usually used for
+     * gui purposes.
+     */
+    void setRxZmqFrequency(int freq, Positions pos = {});
+
+    Result<int> getRxZmqTimer(Positions pos = {}) const;
+
+    /**
+     * If receiver streaming frequency is 0 (default), then this timer between
+     * each data stream is set. Default is 500 ms.
+     */
+    void setRxZmqTimer(int time_in_ms, Positions pos = {});
+
+    Result<int> getRxZmqStartingFrame(Positions pos = {}) const;
+
+    /**
+     * The starting frame index to stream out. 0 by default, which streams
+     * the first frame in an acquisition, and then depending on the rx zmq
+     * frequency/ timer.
+     */
+    void setRxZmqStartingFrame(int fnum, Positions pos = {});
+
+    Result<int> getRxZmqPort(Positions pos = {}) const;
+
+    /** Zmq port for data to be streamed out of the receiver. \n
+     * Also restarts receiver zmq streaming if enabled. \n Default is 30001. \n
+     * Must be different for every detector (and udp port). \n module_id is -1
+     * for all detectors, ports for each module is calculated (increment by 1 if
+     * no 2nd interface). \n Restarts receiver zmq sockets only if it was
+     * already enabled
+     */
+    void setRxZmqPort(int port, int module_id = -1);
+
+    Result<IpAddr> getRxZmqIP(Positions pos = {}) const;
+
+    /** Zmq Ip Address from which data is to be streamed out of the receiver. \n
+     * Also restarts receiver zmq streaming if enabled. \n Default is from
+     * rx_hostname. \n Modified only when using an intermediate process between
+     * receiver. */
+    void setRxZmqIP(const IpAddr ip, Positions pos = {});
+
+    Result<int> getClientZmqPort(Positions pos = {}) const;
+
+    /** Port number to listen to zmq data streamed out from receiver or
+     * intermediate process. \n Must be different for every detector (and udp
+     * port). \n Module_id is -1 for all detectors, ports for each module is
+     * calculated (increment by 1 if no 2nd interface). \n Restarts client zmq
+     * sockets only if it was already enabled \n Default connects to receiver
+     * zmq streaming out port (30001).
+     */
+    void setClientZmqPort(int port, int module_id = -1);
+
+    Result<IpAddr> getClientZmqIp(Positions pos = {}) const;
+
+    /** Ip Address to listen to zmq data streamed out from receiver or
+     * intermediate process. \n Default connects to receiver zmq Ip Address
+     * (from rx_hostname). \n Modified only when using an intermediate process
+     * between receiver and client(gui). \n Also restarts client zmq streaming
+     * if enabled.
+     */
+    void setClientZmqIp(const IpAddr ip, Positions pos = {});
+
+    int getClientZmqHwm() const;
+
+    /** Client's zmq receive high water mark. \n Default is the zmq library's
+     * default (1000), can also be set here using -1. \n This is a high number
+     * and can be set to 2 for gui purposes. \n One must also set the receiver's
+     * send high water mark to similar value. Final effect is sum of them.
+     */
+    void setClientZmqHwm(const int limit);
+
+    Result<int> getRxZmqHwm(Positions pos = {}) const;
+
+    /** Receiver's zmq send high water mark. \n Default is the zmq library's
+     * default (1000) \n This is a high number and can be set to 2 for gui
+     * purposes. \n One must also set the client's receive high water mark to
+     * similar value. Final effect is sum of them. Also restarts receiver zmq
+     * streaming if enabled. \n Can set to -1 to set default.
+     */
+    void setRxZmqHwm(const int limit);
+
+    ///@{
+
+    /** @name Eiger Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Eiger Specific                              *
+     *                                                *
+     * ************************************************/
+
+    /** [Eiger] in 32 bit mode */
+    Result<ns> getSubExptime(Positions pos = {}) const;
+
+    /** [Eiger] in 32 bit mode */
+    void setSubExptime(ns t, Positions pos = {});
+
+    /** [Eiger] in 32 bit mode */
+    Result<ns> getSubDeadTime(Positions pos = {}) const;
+
+    /** [Eiger] in 32 bit mode */
+    void setSubDeadTime(ns value, Positions pos = {});
+
+    /** [Eiger] */
+    Result<int> getThresholdEnergy(Positions pos = {}) const;
+
+    /** [Eiger] It loads trim files from settingspath */
+    void setThresholdEnergy(int threshold_ev,
+                            defs::detectorSettings settings = defs::STANDARD,
+                            bool trimbits = true, Positions pos = {});
+
+    /** [Eiger] */
+    Result<std::string> getSettingsPath(Positions pos = {}) const;
+
+    /** [Eiger] Directory where settings files are loaded from/to */
+    void setSettingsPath(const std::string &value, Positions pos = {});
+
+    /** [Eiger] */
+    Result<bool> getOverFlowMode(Positions pos = {}) const;
+
+    /** [Eiger] Overflow in 32 bit mode. Default is disabled.*/
+    void setOverFlowMode(bool value, Positions pos = {});
+
+    /** [Eiger] */
+    Result<bool> getBottom(Positions pos = {}) const;
+
+    /** [Eiger] for client call back (gui) purposes to flip bottom image */
+    void setBottom(bool value, Positions pos = {});
+
+    /**[Eiger] Returns energies in eV where the module is trimmed */
+    Result<std::vector<int>> getTrimEnergies(Positions pos = {}) const;
+
+    /** [Eiger] List of trim energies, where corresponding default trim files
+     * exist in corresponding trim folders */
+    void setTrimEnergies(std::vector<int> energies, Positions pos = {});
+
+    /** [Eiger] deadtime in ns, 0 = disabled */
+    Result<ns> getRateCorrection(Positions pos = {}) const;
+
+    /** [Eiger] Sets default rate correction from trimbit file */
+    void setDefaultRateCorrection(Positions pos = {});
+
+    /** //TODO: default, get, set
+     * [Eiger] Set Rate correction
+     * 0 disable correction, > 0 custom deadtime, cannot be -1
+     */
+    void setRateCorrection(ns dead_time, Positions pos = {});
+
+    /** [Eiger] */
+    Result<int> getPartialReadout(Positions pos = {}) const;
+
+    /** [Eiger] Number of lines to read out per half module
+     * Options: 0 - 256. 256 is default. The permissible values depend on
+     * dynamic range and 10Gbe enabled.
+     */
+    void setPartialReadout(const int lines, Positions pos = {});
+
+    /** [Eiger] */
+    Result<bool> getInterruptSubframe(Positions pos = {}) const;
+
+    /** [Eiger] Enable last subframe interrupt at required exposure time.
+     * Disabling will wait for last sub frame to finish exposing. Default is
+     * disabled. */
+    void setInterruptSubframe(const bool enable, Positions pos = {});
+
+    /** [Eiger] minimum two frames */
+    Result<ns> getMeasuredPeriod(Positions pos = {}) const;
+
+    /** [Eiger] */
+    Result<ns> getMeasuredSubFramePeriod(Positions pos = {}) const;
+
+    /** [Eiger] */
+    Result<bool> getActive(Positions pos = {}) const;
+
+    /** [Eiger] activated by default at hostname command. Deactivated does not
+     * send data or communicated with FEB or BEB */
+    void setActive(const bool active, Positions pos = {});
+
+    /** [Eiger] */
+    Result<bool> getRxPadDeactivatedMode(Positions pos = {}) const;
+
+    /** [Eiger] Pad deactivated modules in receiver. Enabled by default */
+    void setRxPadDeactivatedMode(bool pad, Positions pos = {});
+
+    /** [Eiger] Advanced */
+    Result<bool> getPartialReset(Positions pos = {}) const;
+
+    /** [Eiger] Advanced used for pulsing chips. Default is Complete reset */
+    void setPartialReset(bool value, Positions pos = {});
+
+    /** [Eiger] Advanced
+     * Pulse Pixel n times at x and y coordinates */
+    void pulsePixel(int n, defs::xy pixel, Positions pos = {});
+
+    /** [Eiger] Advanced
+     * Pulse Pixel n times and move by a relative value of x and y
+     * coordinates */
+    void pulsePixelNMove(int n, defs::xy pixel, Positions pos = {});
+
+    /** [Eiger] Advanced
+     * Pulse chip n times. \n
+     * If n is -1, resets to normal mode (reset chip completely at start of
+     * acquisition, where partialreset = 0).  */
+    void pulseChip(int n, Positions pos = {});
+
+    /** [Eiger] with specific quad hardware */
+    Result<bool> getQuad(Positions pos = {}) const;
+
+    /** [Eiger] Sets detector size to a quad. 0 (disabled) is default. (Specific
+     * hardware required). */
+    void setQuad(const bool enable);
+    ///@{
+
+    /** @name Jungfrau Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Jungfrau Specific                           *
+     *                                                *
+     * ************************************************/
+
+    /** [Jungfrau] */
+    Result<int> getThresholdTemperature(Positions pos = {}) const;
+
+    /**
+     * [Jungfrau]Set threshold temperature in degrees.
+     * If temperature crosses threshold temperature
+     * and temperature control is enabled (default is disabled), power to chip
+     * will be switched off and temperature event will be set. \n To power on
+     * chip again, temperature has to be less than threshold temperature and
+     * temperature event has to be cleared.
+     */
+    void setThresholdTemperature(int temp, Positions pos = {});
+
+    /** [Jungfrau] */
+    Result<bool> getTemperatureControl(Positions pos = {}) const;
+
+    /** [Jungfrau]  refer to setThresholdTemperature
+     * Default is disabled */
+    void setTemperatureControl(bool enable, Positions pos = {});
+
+    /** [Jungfrau] refer to setThresdholdTemperature */
+    Result<int> getTemperatureEvent(Positions pos = {}) const;
+
+    /** [Jungfrau] refer to setThresdholdTemperature */
+    void resetTemperatureEvent(Positions pos = {});
+
+    /** [Jungfrau] */
+    Result<bool> getAutoCompDisable(Positions pos = {}) const;
+
+    /** [Jungfrau] Advanced
+     * //TODO naming
+     * By default, the on-chip gain switching is active during the entire
+     * exposure. This mode disables the on-chip gain switching comparator
+     * automatically after 93.75% of exposure time (only for longer than
+     * 100us).\n
+     * Default is false or this mode disabled(comparator enabled throughout).
+     * true enables mode. 0 disables mode.
+     */
+    void setAutoCompDisable(bool value, Positions pos = {});
+
+    /** [Jungfrau] Advanced TODO naming */
+    Result<int> getNumberOfAdditionalStorageCells(Positions pos = {}) const;
+
+    /** [Jungfrau] Advanced \n
+     * Options: 0 - 15. Default: 0. \n
+     * The #images = #frames x #triggers x (#storagecells + 1) */
+    void setNumberOfAdditionalStorageCells(int value);
+
+    /** [Jungfrau] Advanced */
+    Result<int> getStorageCellStart(Positions pos = {}) const;
+
+    /** [Jungfrau] Advanced. Sets the storage cell storing the first acquisition
+     * of the series. Options: 0-15. Default: 15.
+     */
+    void setStorageCellStart(int cell, Positions pos = {});
+
+    /** [Jungfrau] Advanced*/
+    Result<ns> getStorageCellDelay(Positions pos = {}) const;
+
+    /** [Jungfrau] Advanced \n Additional time delay between 2 consecutive
+     * exposures in burst mode. \n Options: (0-1638375 ns (resolution of 25ns)
+     */
+    void setStorageCellDelay(ns value, Positions pos = {});
+    ///@{
+
+    /** @name Gotthard Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Gotthard Specific                           *
+     *                                                *
+     * ************************************************/
+
+    /** [Gotthard]*/
+    Result<defs::ROI> getROI(Positions pos = {}) const;
+
+    /**
+     * [Gotthard] Region of interest in detector \n
+     * Options: Only a single ROI per module \n
+     * Either all channels or a single adc or 2 chips (256 channels). Default is
+     * all channels enabled (-1 -1). \n module_id is position index
+     */
+    void setROI(defs::ROI value, int module_id);
+
+    /** [Gotthard] Clear ROI to all channels enabled. Default is all channels
+     * enabled. */
+    void clearROI(Positions pos = {});
+
+    /** [Gotthard] */
+    Result<ns> getExptimeLeft(Positions pos = {}) const;
+    ///@{
+
+    /** @name Gotthard2 Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Gotthard2 Specific                          *
+     *                                                *
+     * ************************************************/
+
+    /** [Gotthard2] only in burst mode and auto timing mode */
+    Result<int64_t> getNumberOfBursts(Positions pos = {}) const;
+
+    /** [Gotthard2] only in burst mode and auto timing mode */
+    void setNumberOfBursts(int64_t value);
+
+    /** [Gotthard2] only in burst mode and auto timing mode */
+    Result<ns> getBurstPeriod(Positions pos = {}) const;
+
+    /** [Gotthard2] Period between 2 bursts. Only in burst mode and auto timing
+     * mode */
+    void setBurstPeriod(ns value, Positions pos = {});
+
+    /** [Gotthard2] only in burst auto mode */
+    Result<int64_t> getNumberOfBurstsLeft(Positions pos = {}) const;
+
+    /** [Gotthard2] offset channel, increment channel */
+    Result<std::array<int, 2>> getInjectChannel(Positions pos = {});
+
+    /** [Gotthard2]
+     * Inject channels with current source for calibration.
+     * offsetChannel is starting channel to be injected
+     * incrementChannel is determines succeeding channels to be injected */
+    void setInjectChannel(const int offsetChannel, const int incrementChannel,
+                          Positions pos = {});
+
+    /** [Gotthard2] gain indices and adu values for each channel */
+    void getVetoPhoton(const int chipIndex, const std::string &fname,
+                       Positions pos = {});
+
+    /** [Gotthard2] energy in keV */
+    void setVetoPhoton(const int chipIndex, const int numPhotons,
+                       const int energy, const std::string &fname,
+                       Positions pos = {});
+
+    /** [Gotthard2] for all chips */
+    void setVetoReference(const int gainIndex, const int value,
+                          Positions pos = {});
+
+    /** [Gotthard2] Set veto reference for each 128 channels for specific chip.
+     * The file should have 128 rows of gain index and 12 bit value in dec"*/
+    void setVetoFile(const int chipIndex, const std::string &fname,
+                     Positions pos = {});
+
+    /** [Gotthard2]  */
+    Result<defs::burstMode> getBurstMode(Positions pos = {});
+
+    /** [Gotthard2]  BURST_INTERNAL (default), BURST_EXTERNAL,
+     * CONTINUOUS_INTERNAL, CONTINUOUS_EXTERNAL */
+    void setBurstMode(defs::burstMode value, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<bool> getCDSGain(Positions pos = {}) const;
+
+    /** default disabled */
+    void setCDSGain(bool value, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<int> getFilter(Positions pos = {}) const;
+
+    /** [Gotthard2] Set filter resister. Options: 0-3. Default: 0 */
+    void setFilter(int value, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<bool> getCurrentSource(Positions pos = {}) const;
+
+    /** default disabled */
+    void setCurrentSource(bool value, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<defs::timingSourceType> getTimingSource(Positions pos = {}) const;
+
+    /** [Gotthard2] Options: TIMING_INTERNAL (default), TIMING_EXTERNAL */
+    void setTimingSource(defs::timingSourceType value, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<bool> getVeto(Positions pos = {}) const;
+
+    /** [Gotthard2] Default disabled */
+    void setVeto(const bool enable, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<int> getADCConfiguration(const int chipIndex, const int adcIndex,
+                                    Positions pos = {}) const;
+
+    /** [Gotthard2] configures one chip at a time for specific adc, chipIndex
+     * and adcIndex is -1 for all */
+    void setADCConfiguration(const int chipIndex, const int adcIndex,
+                             const int value, Positions pos = {});
+
+    /** [Gotthard2] */
+    void getBadChannels(const std::string &fname, Positions pos = {}) const;
+
+    /** [Gotthard2] */
+    void setBadChannels(const std::string &fname, Positions pos = {});
+    ///@{
+
+    /** @name Mythen3 Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Mythen3 Specific                            *
+     *                                                *
+     * ************************************************/
+    /** [Mythen3] */
+    Result<uint32_t> getCounterMask(Positions pos = {}) const;
+
+    /** [Mythen3] countermask bit set for each counter index enabled */
+    void setCounterMask(uint32_t countermask, Positions pos = {});
+
+    Result<int> getNumberOfGates(Positions pos = {}) const;
+
+    /** [Mythen3] external gates in gating or trigger_gating mode (external
+     * gating) */
+    void setNumberOfGates(int value, Positions pos = {});
+
+    /** [Mythen3] exptime for each gate signal in auto or trigger timing mode
+     * (internal gating). Gate index: 0-2 */
+    Result<ns> getExptime(int gateIndex, Positions pos = {}) const;
+
+    /** [Mythen3] exptime for each gate signal in auto or trigger timing mode
+     * (internal gating). Gate index: 0-2, -1 for all */
+    void setExptime(int gateIndex, ns t, Positions pos = {});
+
+    /** [Mythen3] exptime for each gate signal in auto or trigger timing mode
+     * (internal gating). Gate index: 0-2, -1 for all */
+    Result<std::array<ns, 3>> getExptimeForAllGates(Positions pos = {}) const;
+
+    /** [Mythen3] gate delay for each gate signal in auto or trigger timing mode
+     * (internal gating). Gate index: 0-2 */
+    Result<ns> getGateDelay(int gateIndex, Positions pos = {}) const;
+
+    /** [Mythen3] gate delay for each gate signal in auto or trigger timing mode
+     * (internal gating). Gate index: 0-2, -1 for all */
+    void setGateDelay(int gateIndex, ns t, Positions pos = {});
+
+    /** [Mythen3] gate delay for all gates in auto or trigger timing mode
+     * (internal gating). Gate index: 0-2, -1 for all */
+    Result<std::array<ns, 3>> getGateDelayForAllGates(Positions pos = {}) const;
+    ///@{
+
+    /** @name CTB / Moench Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    CTB / Moench Specific                       *
+     *                                                *
+     * ************************************************/
+    /** [CTB][Moench] */
+    Result<int> getNumberOfAnalogSamples(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    void setNumberOfAnalogSamples(int value, Positions pos = {});
+
+    /** [CTB][Moench] */
+    Result<int> getADCClock(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    void setADCClock(int value_in_MHz, Positions pos = {});
+
+    /** [CTB][Moench] */
+    Result<int> getRUNClock(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    void setRUNClock(int value_in_MHz, Positions pos = {});
+
+    /** [CTB][Moench]  in MHZ */
+    Result<int> getSYNCClock(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    Result<int> getADCPipeline(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    void setADCPipeline(int value, Positions pos = {});
+
+    /** [CTB][Moench] */
+    Result<int> getVoltage(defs::dacIndex index, Positions pos = {}) const;
+
+    /**
+     * [CTB][Moench] mV
+     * [Ctb] Options: V_LIMIT, V_POWER_A, V_POWER_B, V_POWER_C,
+     * V_POWER_D, V_POWER_IO, V_POWER_CHIP
+     * [Moench] Options: V_LIMIT
+     */
+    void setVoltage(defs::dacIndex index, int value, Positions pos = {});
+
+    /** [CTB][Moench] */
+    Result<uint32_t> getADCEnableMask(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    void setADCEnableMask(uint32_t mask, Positions pos = {});
+
+    /** [CTB][Moench] */
+    Result<uint32_t> getTenGigaADCEnableMask(Positions pos = {}) const;
+
+    /** [CTB][Moench] If any of a consecutive 4 bits are enabled, the "
+        "complete 4 bits are enabled */
+    void setTenGigaADCEnableMask(uint32_t mask, Positions pos = {});
+    ///@{
+
+    /** @name CTB Specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    CTB Specific                                *
+     *                                                *
+     * ************************************************/
+
+    /** [CTB] */
+    Result<int> getNumberOfDigitalSamples(Positions pos = {}) const;
+
+    /** [CTB] */
+    void setNumberOfDigitalSamples(int value, Positions pos = {});
+
+    /** [CTB] */
+    Result<defs::readoutMode> getReadoutMode(Positions pos = {}) const;
+
+    /** [CTB] Options: ANALOG_ONLY (default), DIGITAL_ONLY, ANALOG_AND_DIGITAL
+     */
+    void setReadoutMode(defs::readoutMode value, Positions pos = {});
+
+    /** [CTB] */
+    Result<int> getDBITClock(Positions pos = {}) const;
+
+    /** [CTB] */
+    void setDBITClock(int value_in_MHz, Positions pos = {});
+
+    /** [CTB] */
+    Result<int> getDBITPipeline(Positions pos = {}) const;
+
+    /** [CTB] */
+    void setDBITPipeline(int value, Positions pos = {});
+
+    /**
+     * [CTB] mV
+     * Options: V_POWER_A, V_POWER_B, V_POWER_C, V_POWER_D, V_POWER_IO */
+    Result<int> getMeasuredVoltage(defs::dacIndex index,
+                                   Positions pos = {}) const;
+
+    /**
+     * [CTB] mA
+     * Options: I_POWER_A, I_POWER_B, I_POWER_C, I_POWER_D, I_POWER_IO  */
+    Result<int> getMeasuredCurrent(defs::dacIndex index,
+                                   Positions pos = {}) const;
+
+    /** [CTB] Options: SLOW_ADC0 - SLOW_ADC7  in uV */
+    Result<int> getSlowADC(defs::dacIndex index, Positions pos = {}) const;
+
+    /** [CTB] */
+    Result<int> getExternalSamplingSource(Positions pos = {}) const;
+
+    /** [CTB] Value between 0-63 \n For advanced users only.*/
+    void setExternalSamplingSource(int value, Positions pos = {});
+
+    /** [CTB] */
+    Result<bool> getExternalSampling(Positions pos = {}) const;
+
+    /** [CTB] For advanced users only. */
+    void setExternalSampling(bool value, Positions pos = {});
+
+    /** [CTB] */
+    Result<std::vector<int>> getRxDbitList(Positions pos = {}) const;
+
+    /** [CTB] list contains the set of digital signal bits (0-63) to save, must
+     * be non repetitive */
+    void setRxDbitList(const std::vector<int> &list, Positions pos = {});
+
+    /** [CTB] */
+    Result<int> getRxDbitOffset(Positions pos = {}) const;
+
+    /** [CTB] Set number of bytes of digital data to skip in the Receiver */
+    void setRxDbitOffset(int value, Positions pos = {});
+
+    /**
+     * [CTB] Set Digital IO Delay
+     * cannot get
+     * pinMask is IO mask to select the pins
+     * delay is delay in ps(1 bit=25ps, max of 775 ps)
+     */
+    void setDigitalIODelay(uint64_t pinMask, int delay, Positions pos = {});
+
+    /** [CTB] */
+    Result<bool> getLEDEnable(Positions pos = {}) const;
+
+    /** [CTB] Default is enabled. */
+    void setLEDEnable(bool enable, Positions pos = {});
+    ///@{
+
+    /** @name Pattern */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Pattern                                     *
+     *                                                *
+     * ************************************************/
+
+    /** [CTB][Moench][Mythen3]  Loads ASCII pattern file directly to server
+     * (instead of executing line by line)*/
+    void setPattern(const std::string &fname, Positions pos = {});
+
+    /** [CTB][Moench][Mythen3] [Ctb][Moench][Mythen3] Saves pattern to file
+     * (ascii). \n [Ctb][Moench] Also executes pattern.*/
+    void savePattern(const std::string &fname);
+
+    /** [CTB][Moench] */
+    Result<uint64_t> getPatternIOControl(Positions pos = {}) const;
+
+    /** [CTB][Moench] */
+    void setPatternIOControl(uint64_t word, Positions pos = {});
+
+    /** [CTB][Moench][Mythen3] same as executing for ctb and moench */
+    Result<uint64_t> getPatternWord(int addr, Positions pos = {});
+
+    /** [CTB][Moench] Caution: If word is  -1  reads the addr (same as
+     * executing the pattern)
+     * [Mythen3] */
+    void setPatternWord(int addr, uint64_t word, Positions pos = {});
+
+    /**[CTB][Moench][Mythen3] Options: level: -1 (complete pattern) and 0-2
+     * levels
+     * @returns array of start address and stop address
+     */
+    Result<std::array<int, 2>>
+    getPatternLoopAddresses(int level, Positions pos = {}) const;
+
+    /** [CTB][Moench][Mythen3] Options: level: -1 (complete pattern) and 0-2
+     * levels */
+    void setPatternLoopAddresses(int level, int start, int stop,
+                                 Positions pos = {});
+
+    /**[CTB][Moench][Mythen3] Options: level: -1 (complete pattern) and 0-2
+     * levels  */
+    Result<int> getPatternLoopCycles(int level, Positions pos = {}) const;
+
+    /** [CTB][Moench][Mythen3] n: 0-2, level: -1 (complete pattern) and 0-2
+     * levels */
+    void setPatternLoopCycles(int level, int n, Positions pos = {});
+
+    /**[CTB][Moench][Mythen3] */
+    Result<int> getPatternWaitAddr(int level, Positions pos = {}) const;
+
+    /** [CTB][Moench][Mythen3] Options: level 0-2 */
+    void setPatternWaitAddr(int level, int addr, Positions pos = {});
+
+    /** [CTB][Moench][Mythen3]  */
+    Result<uint64_t> getPatternWaitTime(int level, Positions pos = {}) const;
+
+    /** [CTB][Moench][Mythen3] Options: level 0-2 */
+    void setPatternWaitTime(int level, uint64_t t, Positions pos = {});
+
+    /** [CTB][Moench][Mythen3] */
+    Result<uint64_t> getPatternMask(Positions pos = {});
+
+    /** [CTB][Moench][Mythen3] Sets the mask applied to every pattern to the
+     * selected bits */
+    void setPatternMask(uint64_t mask, Positions pos = {});
+
+    /** [CTB][Moench][Mythen3]  */
+    Result<uint64_t> getPatternBitMask(Positions pos = {}) const;
+
+    /** [CTB][Moench][Mythen3] Selects the bits that will have a pattern mask
+     * applied to the selected patmask for every pattern. */
+    void setPatternBitMask(uint64_t mask, Positions pos = {});
+
+    /** [Mythen3] */
+    void startPattern(Positions pos = {});
+    ///@{
+
+    /** @name Moench specific */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Moench specific                             *
+     *                                                *
+     * ************************************************/
+
+    /** [Moench] */
+    Result<std::map<std::string, std::string>>
+    getAdditionalJsonHeader(Positions pos = {}) const;
+
+    /** [Moench] If empty, reset additional json header. Default is empty. Max
+     * 20 characters for each key/value. Empty value deletes header. Use only if
+     * to be processed by an intermediate user process listening to receiver zmq
+     * packets such as in Moench */
+    void setAdditionalJsonHeader(
+        const std::map<std::string, std::string> &jsonHeader,
+        Positions pos = {});
+
+    /** [Moench] */
+    Result<std::string> getAdditionalJsonParameter(const std::string &key,
+                                                   Positions pos = {}) const;
+    /**
+     * [Moench]
+     * Sets the value for additional json header parameters. If not found,
+     * the pair is appended. Empty value deletes parameter. Max 20 characters
+     * for each key/value.
+     */
+    void setAdditionalJsonParameter(const std::string &key,
+                                    const std::string &value,
+                                    Positions pos = {});
+    ///@{
+
+    /** @name Advanced */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Advanced                                    *
+     *                                                *
+     * ************************************************/
+
+    /**  Advanced user Function!
+     * [Jungfrau][CTB][Moench] fname is a pof file, rebooting the controller is
+     * recommended \n [Mythen3][Gotthard2] fname is an rbf file, power cycling
+     * the detector is recommended
+     */
+    void programFPGA(const std::string &fname, Positions pos = {});
+
+    /** [Jungfrau][CTB][Moench]  Advanced user Function!  */
+    void resetFPGA(Positions pos = {});
+
+    /** [Jungfrau][Gotthard][CTB][Moench][Mythen3][Gotthard2]
+     * Advanced user Function! \n
+     * Copy detector server fname from tftp folder of hostname to detector \n
+     * [Jungfrau][Gotthard][CTB][Moench] Also changes respawn server, which is
+     * effective after a reboot.
+     */
+    void copyDetectorServer(const std::string &fname,
+                            const std::string &hostname, Positions pos = {});
+
+    /** [Jungfrau][Gotthard][CTB][Moench][Mythen3][Gotthard2] Advanced user
+     * Function! */
+    void rebootController(Positions pos = {});
+
+    /**
+     * Advanced user Function!\n [Jungfrau][Gotthard][CTB][Moench] Updates the
+     * firmware, detector server and then reboots detector controller blackfin.
+     * \n [Mythen3][Gotthard2] Will still have old server starting up as the new
+     * server is not respawned \n sname is name of detector server binary found
+     * on tftp folder of host pc \n hostname is name of pc to tftp from \n fname
+     * is programming file name
+     */
+    void updateFirmwareAndServer(const std::string &sname,
+                                 const std::string &hostname,
+                                 const std::string &fname, Positions pos = {});
+
+    /** Advanced user Function! \n
+     * Goes to stop server. Hence, can be called while calling blocking
+     * acquire(). \n [Eiger] Address is +0x100 for only left, +0x200 for only
+     * right. */
+    Result<uint32_t> readRegister(uint32_t addr, Positions pos = {}) const;
+
+    /** Advanced user Function! \n
+     * Goes to stop server. Hence, can be called while calling blocking
+     * acquire(). \n [Eiger] Address is +0x100 for only left, +0x200 for only
+     * right. */
+    void writeRegister(uint32_t addr, uint32_t val, Positions pos = {});
+
+    /** Advanced user Function!  */
+    void setBit(uint32_t addr, int bitnr, Positions pos = {});
+
+    /** Advanced user Function!  */
+    void clearBit(uint32_t addr, int bitnr, Positions pos = {});
+
+    /** Advanced user Function!  */
+    Result<int> getBit(uint32_t addr, int bitnr, Positions pos = {});
+
+    /** [Gotthard][Jungfrau][Mythen3][Gotthard2][CTB][Moench] Advanced user
+     * Function! */
+    void executeFirmwareTest(Positions pos = {});
+
+    /** [Gotthard][Jungfrau][Mythen3][Gotthard2][CTB][Moench] Advanced user
+     * Function! Writes different values in a R/W register and confirms the
+     * writes to check bus */
+    void executeBusTest(Positions pos = {});
+
+    /** [Gotthard][Jungfrau][CTB][Moench] Advanced user Function! not possible
+     * to read back */
+    void writeAdcRegister(uint32_t addr, uint32_t value, Positions pos = {});
+
+    /** Advanced user Function!  */
+    bool getInitialChecks() const;
+
+    /** Enables/disabled initial compaibility and other server start up checks.
+     * \n Default is enabled. Must come before 'hostname' command to take
+     * effect. \n Can be used to reprogram fpga when current firmware is
+     * incompatible. \n Advanced user Function! */
+    void setInitialChecks(const bool value);
+
+    /** [CTB][Moench][Jungfrau] Advanced user Function! */
+    Result<uint32_t> getADCInvert(Positions pos = {}) const;
+
+    /** [CTB][Moench][Jungfrau] Advanced user Function! \n
+    [Jungfrau] Inversions on top of default mask */
+    void setADCInvert(uint32_t value, Positions pos = {});
+    ///@{
+
+    /** @name Insignificant */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Insignificant                               *
+     *                                                *
+     * ************************************************/
+
+    Result<int> getControlPort(Positions pos = {}) const;
+
+    /** Detector Control TCP port (for client communication with Detector
+     * control server) Default is 1952. Normally unchanged. Set different ports
+     * for virtual servers on same pc */
+    void setControlPort(int value, Positions pos = {});
+
+    Result<int> getStopPort(Positions pos = {}) const;
+
+    /** Port number of the stop server on detector for detector-client tcp
+     * interface. Default is 1953. Normally unchanged. */
+    void setStopPort(int value, Positions pos = {});
+
+    Result<bool> getDetectorLock(Positions pos = {}) const;
+
+    /** lock detector to one client IP. default is unlocked */
+    void setDetectorLock(bool lock, Positions pos = {});
+
+    /** Client IP Address that last communicated with the detector */
+    Result<sls::IpAddr> getLastClientIP(Positions pos = {}) const;
+
+    /** Execute a command on the detector server console */
+    Result<std::string> executeCommand(const std::string &value,
+                                       Positions pos = {});
+
+    /** [Jungfrau][Mythen3][CTB][Moench]
+     * [Gotthard2] only in continuous mode */
+    Result<int64_t> getNumberOfFramesFromStart(Positions pos = {}) const;
+
+    /** [Jungfrau][Mythen3][CTB][Moench] Get time from detector start
+     * [Gotthard2] not in burst and auto mode */
+    Result<ns> getActualTime(Positions pos = {}) const;
+
+    /** [Jungfrau][Mythen3][CTB][Moench] Get timestamp at a frame start
+     * [Gotthard2] not in burst and auto mode */
+    Result<ns> getMeasurementTime(Positions pos = {}) const;
+
+    /** get user details from shared memory  (hostname, type, PID, User, Date)
+     */
+    std::string getUserDetails() const;
+
+    Result<uint64_t> getRxCurrentFrameIndex(Positions pos = {}) const;
+    ///@{
+
+  private:
+    std::vector<int> getPortNumbers(int start_port);
+    void updateRxRateCorrections();
+};
+
+} // namespace sls

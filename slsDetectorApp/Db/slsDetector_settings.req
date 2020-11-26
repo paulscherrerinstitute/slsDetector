@@ -1,14 +1,7 @@
 $(P)$(R)Setting
 $(P)$(R)BeamEnergy
 $(P)$(R)ThresholdEnergy
-$(P)$(R)Online
-$(P)$(R)FlatFieldPath
-$(P)$(R)FlatFieldFile
-$(P)$(R)FlatFieldFile
-$(P)$(R)UseFlatField
-$(P)$(R)UseCountRate
-$(P)$(R)UsePixelMask
-$(P)$(R)UseAngularConv
+$(P)$(R)Trimbits
 $(P)$(R)BitDepth
 $(P)$(R)TimingMode
 $(P)$(R)ReceiverMode
@@ -19,5 +12,12 @@ $(P)$(R)NumGates
 $(P)$(R)NumCycles
 $(P)$(R)NumFrames
 $(P)$(R)SetupFile 
+$(P)$(R)Gate1Width
+$(P)$(R)Gate2Width
+$(P)$(R)Gate3Width
+$(P)$(R)Gate1Delay
+$(P)$(R)Gate2Delay
+$(P)$(R)Gate3Delay
+$(P)$(R)CounterMask
 file "ADBase_settings.req", P=$(P), R=$(R)
 file "NDFile_settings.req", P=$(P), R=$(R)

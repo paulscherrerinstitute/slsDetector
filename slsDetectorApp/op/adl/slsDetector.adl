@@ -1,12 +1,12 @@
 
 file {
-	name="/afs/psi.ch/user/w/wang_x1/xxx/G/DRV/slsDetector/slsDetectorApp/op/adl/slsDetector.adl"
-	version=030105
+	name="/afs/psi.ch/group/8435/wang/epics_driver_modules/slsDetector/psiBuild/../slsDetectorApp/op/adl/slsDetector.adl"
+	version=030115
 }
 display {
 	object {
-		x=26
-		y=176
+		x=4
+		y=231
 		width=1290
 		height=810
 	}
@@ -147,7 +147,7 @@ rectangle {
 		x=5
 		y=462
 		width=350
-		height=345
+		height=186
 	}
 	"basic attribute" {
 		clr=14
@@ -262,7 +262,7 @@ composite {
 composite {
 	object {
 		x=491
-		y=210
+		y=213
 		width=105
 		height=21
 	}
@@ -271,7 +271,7 @@ composite {
 		rectangle {
 			object {
 				x=491
-				y=210
+				y=213
 				width=105
 				height=21
 			}
@@ -284,9 +284,9 @@ composite {
 rectangle {
 	object {
 		x=363
-		y=210
+		y=213
 		width=350
-		height=515
+		height=419
 	}
 	"basic attribute" {
 		clr=14
@@ -296,7 +296,7 @@ rectangle {
 text {
 	object {
 		x=452
-		y=211
+		y=214
 		width=157
 		height=20
 	}
@@ -309,7 +309,7 @@ text {
 composite {
 	object {
 		x=409
-		y=238
+		y=241
 		width=280
 		height=20
 	}
@@ -318,7 +318,7 @@ composite {
 		text {
 			object {
 				x=409
-				y=238
+				y=241
 				width=130
 				height=20
 			}
@@ -331,7 +331,7 @@ composite {
 		"text entry" {
 			object {
 				x=544
-				y=238
+				y=241
 				width=60
 				height=20
 			}
@@ -346,7 +346,7 @@ composite {
 		"text update" {
 			object {
 				x=609
-				y=239
+				y=242
 				width=80
 				height=18
 			}
@@ -363,7 +363,7 @@ composite {
 composite {
 	object {
 		x=399
-		y=263
+		y=266
 		width=290
 		height=20
 	}
@@ -372,7 +372,7 @@ composite {
 		text {
 			object {
 				x=399
-				y=263
+				y=266
 				width=140
 				height=20
 			}
@@ -385,7 +385,7 @@ composite {
 		"text entry" {
 			object {
 				x=544
-				y=263
+				y=266
 				width=60
 				height=20
 			}
@@ -400,7 +400,7 @@ composite {
 		"text update" {
 			object {
 				x=609
-				y=264
+				y=267
 				width=80
 				height=18
 			}
@@ -417,7 +417,7 @@ composite {
 composite {
 	object {
 		x=469
-		y=595
+		y=478
 		width=201
 		height=40
 	}
@@ -426,7 +426,7 @@ composite {
 		text {
 			object {
 				x=587
-				y=595
+				y=478
 				width=40
 				height=20
 			}
@@ -444,7 +444,7 @@ composite {
 		text {
 			object {
 				x=558
-				y=595
+				y=478
 				width=100
 				height=20
 			}
@@ -462,7 +462,7 @@ composite {
 		"message button" {
 			object {
 				x=544
-				y=615
+				y=498
 				width=59
 				height=20
 			}
@@ -477,7 +477,7 @@ composite {
 		"message button" {
 			object {
 				x=611
-				y=615
+				y=498
 				width=59
 				height=20
 			}
@@ -492,7 +492,7 @@ composite {
 		text {
 			object {
 				x=469
-				y=615
+				y=498
 				width=70
 				height=20
 			}
@@ -507,7 +507,7 @@ composite {
 composite {
 	object {
 		x=409
-		y=645
+		y=553
 		width=280
 		height=20
 	}
@@ -516,7 +516,7 @@ composite {
 		"text entry" {
 			object {
 				x=544
-				y=645
+				y=553
 				width=60
 				height=20
 			}
@@ -531,7 +531,7 @@ composite {
 		text {
 			object {
 				x=409
-				y=645
+				y=553
 				width=130
 				height=20
 			}
@@ -544,7 +544,7 @@ composite {
 		"text update" {
 			object {
 				x=609
-				y=646
+				y=554
 				width=80
 				height=18
 			}
@@ -561,7 +561,7 @@ composite {
 composite {
 	object {
 		x=369
-		y=695
+		y=603
 		width=330
 		height=20
 	}
@@ -570,7 +570,7 @@ composite {
 		text {
 			object {
 				x=369
-				y=695
+				y=603
 				width=150
 				height=20
 			}
@@ -583,7 +583,7 @@ composite {
 		menu {
 			object {
 				x=524
-				y=695
+				y=603
 				width=90
 				height=20
 			}
@@ -596,7 +596,7 @@ composite {
 		"text update" {
 			object {
 				x=619
-				y=697
+				y=605
 				width=80
 				height=18
 			}
@@ -615,7 +615,7 @@ composite {
 composite {
 	object {
 		x=439
-		y=670
+		y=578
 		width=205
 		height=20
 	}
@@ -624,7 +624,7 @@ composite {
 		text {
 			object {
 				x=439
-				y=670
+				y=578
 				width=100
 				height=20
 			}
@@ -637,7 +637,7 @@ composite {
 		"text update" {
 			object {
 				x=544
-				y=671
+				y=579
 				width=100
 				height=18
 			}
@@ -654,7 +654,7 @@ composite {
 composite {
 	object {
 		x=914
-		y=585
+		y=687
 		width=171
 		height=21
 	}
@@ -663,7 +663,7 @@ composite {
 		rectangle {
 			object {
 				x=914
-				y=585
+				y=687
 				width=171
 				height=21
 			}
@@ -675,9 +675,9 @@ composite {
 }
 text {
 	object {
-		x=967
-		y=585
-		width=64
+		x=942
+		y=687
+		width=120
 		height=20
 	}
 	"basic attribute" {
@@ -689,7 +689,7 @@ text {
 rectangle {
 	object {
 		x=720
-		y=583
+		y=685
 		width=560
 		height=60
 	}
@@ -701,7 +701,7 @@ rectangle {
 text {
 	object {
 		x=727
-		y=612
+		y=714
 		width=64
 		height=20
 	}
@@ -714,8 +714,8 @@ text {
 "text entry" {
 	object {
 		x=801
-		y=613
-		width=448
+		y=715
+		width=450
 		height=20
 	}
 	control {
@@ -730,7 +730,7 @@ text {
 composite {
 	object {
 		x=738
-		y=292
+		y=317
 		width=109
 		height=21
 	}
@@ -739,7 +739,7 @@ composite {
 		composite {
 			object {
 				x=738
-				y=292
+				y=317
 				width=109
 				height=21
 			}
@@ -748,7 +748,7 @@ composite {
 				rectangle {
 					object {
 						x=738
-						y=292
+						y=317
 						width=109
 						height=21
 					}
@@ -761,7 +761,7 @@ composite {
 		text {
 			object {
 				x=772
-				y=292
+				y=317
 				width=41
 				height=20
 			}
@@ -776,7 +776,7 @@ composite {
 text {
 	object {
 		x=748
-		y=484
+		y=509
 		width=133
 		height=20
 	}
@@ -789,7 +789,7 @@ text {
 "text update" {
 	object {
 		x=890
-		y=485
+		y=510
 		width=370
 		height=18
 	}
@@ -805,7 +805,7 @@ text {
 text {
 	object {
 		x=768
-		y=417
+		y=442
 		width=112
 		height=20
 	}
@@ -818,7 +818,7 @@ text {
 "text entry" {
 	object {
 		x=890
-		y=416
+		y=441
 		width=61
 		height=22
 	}
@@ -833,7 +833,7 @@ text {
 "text update" {
 	object {
 		x=956
-		y=418
+		y=443
 		width=82
 		height=18
 	}
@@ -848,7 +848,7 @@ text {
 text {
 	object {
 		x=780
-		y=391
+		y=416
 		width=100
 		height=20
 	}
@@ -861,7 +861,7 @@ text {
 "text entry" {
 	object {
 		x=889
-		y=391
+		y=416
 		width=370
 		height=20
 	}
@@ -877,7 +877,7 @@ text {
 "text update" {
 	object {
 		x=889
-		y=368
+		y=393
 		width=370
 		height=18
 	}
@@ -893,7 +893,7 @@ text {
 "text entry" {
 	object {
 		x=892
-		y=343
+		y=368
 		width=370
 		height=20
 	}
@@ -909,7 +909,7 @@ text {
 "text update" {
 	object {
 		x=889
-		y=320
+		y=345
 		width=370
 		height=18
 	}
@@ -925,7 +925,7 @@ text {
 text {
 	object {
 		x=788
-		y=343
+		y=368
 		width=92
 		height=20
 	}
@@ -938,7 +938,7 @@ text {
 rectangle {
 	object {
 		x=720
-		y=285
+		y=310
 		width=560
 		height=230
 	}
@@ -947,104 +947,10 @@ rectangle {
 		fill="outline"
 	}
 }
-rectangle {
-	object {
-		x=905
-		y=40
-		width=180
-		height=20
-	}
-	"basic attribute" {
-		clr=2
-	}
-}
-text {
-	object {
-		x=913
-		y=40
-		width=160
-		height=20
-	}
-	"basic attribute" {
-		clr=54
-	}
-	textix="Data corrections"
-	align="horiz. centered"
-}
-rectangle {
-	object {
-		x=720
-		y=35
-		width=560
-		height=241
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-}
-text {
-	object {
-		x=735
-		y=87
-		width=160
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Flat field path:"
-	align="horiz. right"
-}
-text {
-	object {
-		x=735
-		y=137
-		width=160
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Flat field file:"
-	align="horiz. right"
-}
-"text entry" {
-	object {
-		x=900
-		y=87
-		width=370
-		height=20
-	}
-	control {
-		chan="$(P)$(R)FlatFieldPath"
-		clr=14
-		bclr=51
-	}
-	format="string"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=900
-		y=137
-		width=370
-		height=20
-	}
-	control {
-		chan="$(P)$(R)FlatFieldFile"
-		clr=14
-		bclr=51
-	}
-	format="string"
-	limits {
-	}
-}
 composite {
 	object {
 		x=1144
-		y=294
+		y=319
 		width=115
 		height=20
 	}
@@ -1053,7 +959,7 @@ composite {
 		text {
 			object {
 				x=1144
-				y=294
+				y=319
 				width=70
 				height=20
 			}
@@ -1065,7 +971,7 @@ composite {
 		"text update" {
 			object {
 				x=1219
-				y=294
+				y=319
 				width=40
 				height=20
 			}
@@ -1080,38 +986,10 @@ composite {
 		}
 	}
 }
-text {
-	object {
-		x=41
-		y=637
-		width=160
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Threshold (eV):"
-	align="horiz. right"
-}
-"text entry" {
-	object {
-		x=206
-		y=637
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)ThresholdEnergy"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
 "text update" {
 	object {
 		x=240
-		y=725
+		y=573
 		width=90
 		height=18
 	}
@@ -1127,137 +1005,33 @@ text {
 text {
 	object {
 		x=16
-		y=724
+		y=572
 		width=120
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Bit Depth:"
-	align="horiz. right"
-}
-text {
-	object {
-		x=735
-		y=164
-		width=250
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Flat field correction"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=1000
-		y=164
-		width=94
-		height=20
-	}
-	control {
-		chan="$(P)$(R)UseFlatField"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=735
-		y=191
-		width=250
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Count rate correction"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=1000
-		y=191
-		width=94
-		height=20
-	}
-	control {
-		chan="$(P)$(R)UseCountRate"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=735
-		y=218
-		width=250
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Pixel mask correction"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=1000
-		y=218
-		width=94
-		height=20
-	}
-	control {
-		chan="$(P)$(R)UsePixelMask"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=985
-		y=246
-		width=94
-		height=20
-	}
-	control {
-		chan="$(P)$(R)UseAngularConv"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=735
-		y=246
-		width=250
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Angular conversion"
+	textix="Bit Depth"
 	align="horiz. right"
 }
 text {
 	object {
 		x=16
-		y=696
+		y=545
 		width=120
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Setting:"
+	textix="Setting"
 	align="horiz. right"
 }
 menu {
 	object {
 		x=144
-		y=696
+		y=545
 		width=90
 		height=20
 	}
@@ -1270,7 +1044,7 @@ menu {
 "text update" {
 	object {
 		x=240
-		y=697
+		y=546
 		width=90
 		height=18
 	}
@@ -1283,190 +1057,12 @@ menu {
 	limits {
 	}
 }
-text {
-	object {
-		x=20
-		y=665
-		width=180
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Beam Energy (eV):"
-	align="horiz. right"
-}
-"text entry" {
-	object {
-		x=206
-		y=665
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)BeamEnergy"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-text {
-	object {
-		x=15
-		y=560
-		width=130
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Region Start"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=156
-		y=541
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)MinX_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=249
-		y=541
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)MinY_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=155
-		y=561
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)MinX"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=248
-		y=561
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)MinY"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-text {
-	object {
-		x=15
-		y=607
-		width=130
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Region Size"
-	align="horiz. right"
-}
-"text entry" {
-	object {
-		x=155
-		y=608
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)SizeX"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=248
-		y=608
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)SizeY"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=248
-		y=588
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)SizeY_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=155
-		y=588
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)SizeX_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
 rectangle {
 	object {
 		x=720
-		y=519
+		y=557
 		width=560
-		height=60
+		height=112
 	}
 	"basic attribute" {
 		clr=14
@@ -1475,9 +1071,9 @@ rectangle {
 }
 text {
 	object {
-		x=732
-		y=548
-		width=38
+		x=725
+		y=586
+		width=100
 		height=20
 	}
 	"basic attribute" {
@@ -1488,9 +1084,9 @@ text {
 }
 "text entry" {
 	object {
-		x=776
-		y=549
-		width=268
+		x=832
+		y=587
+		width=350
 		height=20
 	}
 	control {
@@ -1504,8 +1100,8 @@ text {
 }
 "message button" {
 	object {
-		x=1071
-		y=547
+		x=1200
+		y=585
 		width=60
 		height=20
 	}
@@ -1517,25 +1113,10 @@ text {
 	label="Load"
 	press_msg="1"
 }
-"message button" {
-	object {
-		x=1148
-		y=548
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R)SaveSetup"
-		clr=14
-		bclr=51
-	}
-	label="Save"
-	press_msg="1"
-}
 "text entry" {
 	object {
 		x=143
-		y=725
+		y=573
 		width=90
 		height=20
 	}
@@ -1547,176 +1128,10 @@ text {
 	limits {
 	}
 }
-menu {
-	object {
-		x=142
-		y=755
-		width=90
-		height=20
-	}
-	control {
-		chan="$(P)$(R)Online"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=16
-		y=755
-		width=120
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Online:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=240
-		y=756
-		width=90
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)Online_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=1111
-		y=165
-		width=94
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)UseFlatField_RBV"
-		clr=54
-		bclr=4
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=1111
-		y=192
-		width=94
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)UseCountRate_RBV"
-		clr=54
-		bclr=4
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=1111
-		y=219
-		width=94
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)UsePixelMask_RBV"
-		clr=54
-		bclr=4
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=1111
-		y=247
-		width=94
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)UseAngularConv_RBV"
-		clr=54
-		bclr=4
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=271
-		y=639
-		width=63
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)ThresholdEnergy_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=270
-		y=665
-		width=63
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)BeamEnergy_RBV"
-		clr=54
-		bclr=4
-	}
-	align="horiz. right"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=900
-		y=115
-		width=370
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)FlatFieldFile_RBV"
-		clr=54
-		bclr=4
-	}
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=900
-		y=65
-		width=370
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)FlatFieldPath_RBV"
-		clr=54
-		bclr=4
-	}
-	format="string"
-	limits {
-	}
-}
 composite {
 	object {
-		x=379
-		y=311
+		x=378
+		y=314
 		width=310
 		height=20
 	}
@@ -1724,8 +1139,8 @@ composite {
 	children {
 		text {
 			object {
-				x=379
-				y=311
+				x=378
+				y=314
 				width=160
 				height=20
 			}
@@ -1737,8 +1152,8 @@ composite {
 		}
 		"text entry" {
 			object {
-				x=544
-				y=311
+				x=543
+				y=314
 				width=60
 				height=20
 			}
@@ -1752,8 +1167,8 @@ composite {
 		}
 		"text update" {
 			object {
-				x=609
-				y=312
+				x=608
+				y=315
 				width=80
 				height=18
 			}
@@ -1770,7 +1185,7 @@ composite {
 text {
 	object {
 		x=782
-		y=452
+		y=477
 		width=100
 		height=20
 	}
@@ -1783,7 +1198,7 @@ text {
 menu {
 	object {
 		x=889
-		y=453
+		y=478
 		width=90
 		height=20
 	}
@@ -1796,7 +1211,7 @@ menu {
 "text update" {
 	object {
 		x=984
-		y=453
+		y=478
 		width=100
 		height=18
 	}
@@ -1812,7 +1227,7 @@ menu {
 composite {
 	object {
 		x=379
-		y=287
+		y=290
 		width=309
 		height=20
 	}
@@ -1821,7 +1236,7 @@ composite {
 		"text update" {
 			object {
 				x=608
-				y=288
+				y=291
 				width=80
 				height=18
 			}
@@ -1836,7 +1251,7 @@ composite {
 		"text entry" {
 			object {
 				x=543
-				y=287
+				y=290
 				width=60
 				height=20
 			}
@@ -1851,7 +1266,7 @@ composite {
 		text {
 			object {
 				x=379
-				y=287
+				y=290
 				width=160
 				height=20
 			}
@@ -1866,7 +1281,7 @@ composite {
 composite {
 	object {
 		x=438
-		y=335
+		y=338
 		width=249
 		height=20
 	}
@@ -1875,7 +1290,7 @@ composite {
 		text {
 			object {
 				x=438
-				y=335
+				y=338
 				width=100
 				height=20
 			}
@@ -1888,7 +1303,7 @@ composite {
 		"text entry" {
 			object {
 				x=543
-				y=335
+				y=338
 				width=59
 				height=20
 			}
@@ -1903,7 +1318,7 @@ composite {
 		"text update" {
 			object {
 				x=607
-				y=336
+				y=339
 				width=80
 				height=18
 			}
@@ -1920,8 +1335,8 @@ composite {
 }
 composite {
 	object {
-		x=379
-		y=362
+		x=378
+		y=365
 		width=310
 		height=20
 	}
@@ -1929,8 +1344,8 @@ composite {
 	children {
 		"text entry" {
 			object {
-				x=544
-				y=362
+				x=543
+				y=365
 				width=60
 				height=20
 			}
@@ -1944,8 +1359,8 @@ composite {
 		}
 		text {
 			object {
-				x=379
-				y=362
+				x=378
+				y=365
 				width=160
 				height=20
 			}
@@ -1957,8 +1372,8 @@ composite {
 		}
 		"text update" {
 			object {
-				x=609
-				y=363
+				x=608
+				y=366
 				width=80
 				height=18
 			}
@@ -1974,8 +1389,8 @@ composite {
 }
 composite {
 	object {
-		x=405
-		y=486
+		x=406
+		y=716
 		width=280
 		height=20
 	}
@@ -1983,8 +1398,8 @@ composite {
 	children {
 		"text entry" {
 			object {
-				x=540
-				y=486
+				x=541
+				y=716
 				width=60
 				height=20
 			}
@@ -1998,8 +1413,8 @@ composite {
 		}
 		"text update" {
 			object {
-				x=605
-				y=488
+				x=606
+				y=718
 				width=80
 				height=18
 			}
@@ -2013,8 +1428,8 @@ composite {
 		}
 		text {
 			object {
-				x=405
-				y=486
+				x=406
+				y=716
 				width=130
 				height=20
 			}
@@ -2026,75 +1441,23 @@ composite {
 		}
 	}
 }
-composite {
-	object {
-		x=372
-		y=412
-		width=333
-		height=21
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=372
-				y=412
-				width=120
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Acquire Mode"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=498
-				y=413
-				width=100
-				height=20
-			}
-			control {
-				chan="$(P)$(R)ImageMode"
-				clr=14
-				bclr=51
-			}
-		}
-		"text update" {
-			object {
-				x=605
-				y=413
-				width=100
-				height=18
-			}
-			monitor {
-				chan="$(P)$(R)ImageMode_RBV"
-				clr=54
-				bclr=4
-			}
-			limits {
-			}
-		}
-	}
-}
 text {
 	object {
-		x=-3
-		y=780
-		width=140
+		x=16
+		y=599
+		width=120
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="High voltage:"
+	textix="High voltage"
 	align="horiz. right"
 }
 "text entry" {
 	object {
 		x=143
-		y=780
+		y=599
 		width=90
 		height=20
 	}
@@ -2109,7 +1472,7 @@ text {
 "text update" {
 	object {
 		x=240
-		y=780
+		y=599
 		width=90
 		height=18
 	}
@@ -2122,42 +1485,10 @@ text {
 	limits {
 	}
 }
-polyline {
-	object {
-		x=379
-		y=474
-		width=312
-		height=0
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-	points {
-		(379,474)
-		(691,474)
-	}
-}
-polyline {
-	object {
-		x=379
-		y=566
-		width=312
-		height=0
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-	points {
-		(379,566)
-		(691,566)
-	}
-}
 composite {
 	object {
-		x=379
-		y=538
+		x=380
+		y=768
 		width=321
 		height=20
 	}
@@ -2165,8 +1496,8 @@ composite {
 	children {
 		text {
 			object {
-				x=379
-				y=538
+				x=380
+				y=768
 				width=150
 				height=20
 			}
@@ -2178,8 +1509,8 @@ composite {
 		}
 		menu {
 			object {
-				x=540
-				y=538
+				x=541
+				y=768
 				width=70
 				height=20
 			}
@@ -2191,8 +1522,8 @@ composite {
 		}
 		"text update" {
 			object {
-				x=620
-				y=539
+				x=621
+				y=769
 				width=80
 				height=18
 			}
@@ -2209,8 +1540,8 @@ composite {
 }
 composite {
 	object {
-		x=379
-		y=512
+		x=380
+		y=742
 		width=321
 		height=20
 	}
@@ -2218,8 +1549,8 @@ composite {
 	children {
 		text {
 			object {
-				x=379
-				y=512
+				x=380
+				y=742
 				width=150
 				height=20
 			}
@@ -2231,8 +1562,8 @@ composite {
 		}
 		menu {
 			object {
-				x=540
-				y=512
+				x=541
+				y=742
 				width=70
 				height=20
 			}
@@ -2244,8 +1575,8 @@ composite {
 		}
 		"text update" {
 			object {
-				x=620
-				y=513
+				x=621
+				y=743
 				width=80
 				height=18
 			}
@@ -2260,104 +1591,39 @@ composite {
 		}
 	}
 }
-composite {
+text {
 	object {
-		x=380
-		y=575
-		width=318
+		x=381
+		y=527
+		width=160
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=380
-				y=575
-				width=160
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Detector Status"
-			align="horiz. right"
-		}
-		"text update" {
-			object {
-				x=555
-				y=576
-				width=143
-				height=18
-			}
-			monitor {
-				chan="$(P)$(R)DetectorState_RBV"
-				clr=54
-				bclr=4
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=14
 	}
+	textix="Detector Status"
+	align="horiz. right"
 }
-composite {
+"text update" {
 	object {
-		x=377
-		y=387
-		width=331
-		height=21
+		x=556
+		y=528
+		width=143
+		height=18
 	}
-	"composite name"=""
-	children {
-		menu {
-			object {
-				x=495
-				y=388
-				width=110
-				height=20
-			}
-			control {
-				chan="$(P)$(R)TimingMode"
-				clr=14
-				bclr=51
-			}
-		}
-		"text update" {
-			object {
-				x=608
-				y=388
-				width=100
-				height=18
-			}
-			monitor {
-				chan="$(P)$(R)TimingMode_RBV"
-				clr=54
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		text {
-			object {
-				x=377
-				y=387
-				width=110
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Timing mode"
-			align="horiz. right"
-		}
+	monitor {
+		chan="$(P)$(R)DetectorState_RBV"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	limits {
 	}
 }
 text {
 	object {
 		x=377
-		y=440
+		y=443
 		width=180
 		height=20
 	}
@@ -2370,7 +1636,7 @@ text {
 "message button" {
 	object {
 		x=574
-		y=440
+		y=443
 		width=96
 		height=20
 	}
@@ -2385,7 +1651,7 @@ text {
 composite {
 	object {
 		x=923
-		y=521
+		y=559
 		width=150
 		height=21
 	}
@@ -2394,7 +1660,7 @@ composite {
 		rectangle {
 			object {
 				x=923
-				y=521
+				y=559
 				width=150
 				height=21
 			}
@@ -2405,7 +1671,7 @@ composite {
 		text {
 			object {
 				x=923
-				y=521
+				y=559
 				width=150
 				height=20
 			}
@@ -2415,5 +1681,331 @@ composite {
 			textix="Detector Setup"
 			align="horiz. centered"
 		}
+	}
+}
+text {
+	object {
+		x=16
+		y=626
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Temperature"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=145
+		y=627
+		width=90
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)TemperatureActual"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+composite {
+	object {
+		x=486
+		y=639
+		width=105
+		height=21
+	}
+	"composite name"=""
+	children {
+		rectangle {
+			object {
+				x=486
+				y=639
+				width=105
+				height=21
+			}
+			"basic attribute" {
+				clr=2
+			}
+		}
+	}
+}
+text {
+	object {
+		x=452
+		y=640
+		width=157
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="Receiver"
+	align="horiz. centered"
+}
+rectangle {
+	object {
+		x=363
+		y=639
+		width=350
+		height=159
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
+text {
+	object {
+		x=377
+		y=665
+		width=160
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Receiver Status"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=552
+		y=666
+		width=143
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ReceiverState_RBV"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+composite {
+	object {
+		x=372
+		y=390
+		width=338
+		height=21
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=372
+				y=390
+				width=120
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Timing mode"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=495
+				y=391
+				width=110
+				height=20
+			}
+			control {
+				chan="$(P)$(R)TimingMode"
+				clr=14
+				bclr=51
+			}
+		}
+		"text update" {
+			object {
+				x=610
+				y=391
+				width=100
+				height=18
+			}
+			monitor {
+				chan="$(P)$(R)TimingMode_RBV"
+				clr=54
+				bclr=4
+			}
+			align="horiz. centered"
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=372
+		y=415
+		width=338
+		height=21
+	}
+	"composite name"=""
+	children {
+		menu {
+			object {
+				x=495
+				y=416
+				width=110
+				height=20
+			}
+			control {
+				chan="$(P)$(R)ImageMode"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=372
+				y=415
+				width=120
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Image Mode"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=610
+				y=416
+				width=100
+				height=18
+			}
+			monitor {
+				chan="$(P)$(R)ImageMode_RBV"
+				clr=54
+				bclr=4
+			}
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=725
+		y=641
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Commands"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=832
+		y=640
+		width=350
+		height=20
+	}
+	control {
+		chan="$(P)$(R)Command"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=832
+		y=621
+		width=420
+		height=14
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="command strings separted by ';', e.g. 'exptime 1;period 2'"
+}
+rectangle {
+	object {
+		x=831
+		y=638
+		width=352
+		height=24
+	}
+	"basic attribute" {
+		clr=0
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="J"
+		chan="$(P)$(R)Command"
+	}
+}
+composite {
+	object {
+		x=720
+		y=35
+		width=561
+		height=250
+	}
+	"composite name"=""
+	"composite file"="slsDetectorEIGER.adl"
+	"dynamic attribute" {
+		vis="calc"
+		calc="A=1"
+		chan="$(P)$(R)DetectorType_RBV"
+	}
+}
+composite {
+	object {
+		x=720
+		y=35
+		width=560
+		height=250
+	}
+	"composite name"=""
+	"composite file"="slsDetectorMYTHEN3.adl"
+	"dynamic attribute" {
+		vis="calc"
+		calc="A=6"
+		chan="$(P)$(R)DetectorType_RBV"
+	}
+}
+text {
+	object {
+		x=377
+		y=687
+		width=160
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Missed Packets"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=552
+		y=688
+		width=143
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ReceiverMissedPackets_RBV"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	limits {
 	}
 }
