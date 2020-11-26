@@ -32,27 +32,27 @@ NDAutoSave                $(P)$(R)AutoSave            Write flag (0=No, 1=Yes) c
 slsDetector specific parameters
 -------------------------------
 
-========================  ============== ====== ===================  =======================   ============
-Parameter index variable  asyn interface Access drvInfo string       EPICS record name         Description
-========================  ============== ====== ===================  =======================   ============
-DetectorType              asynInt32      r/o    SD_DETECTOR_TYPE     $(P)$(R)DetectorType_RBV  Detector type enum
-SDSetting                 asynInt32      r/w    SD_SETTING           $(P)$(R)Setting           Detector settings
-SDBitDepth                asynInt32      r/w    SD_BIT_DEPTH         $(P)$(R)BitDepth          Dynamic range
-SDTimingMode              asynInt32      r/w    SD_TMODE             $(P)$(R)TimingMode        External signal communication mode, triggering, gating
-SDTriggerSoftware         asynInt32      r/w    SD_TRIGGER_SOFTWARE  $(P)$(R)TriggerSoftware   Send software trigger
-SDDelayTime               asynFloat64    r/w    SD_DELAY_TIME        $(P)$(R)DelayTime         Delay in seconds between external trigger and the start of image acquisition
-SDRecvMode                asynInt32      r/w    SD_RECV_MODE         $(P)$(R)ReceiverMode      Receiver data callback frequency
-SDRecvStream              asynInt32      r/w    SD_RECV_STREAM       $(P)$(R)ReceiverStream    Enable/disable receiver stream
-SDRecvStatus              asynInt32      r/o    SD_RECV_STATUS       $(P)$(R)ReceiverState_RBV Receiver status
-SDRecvMissed              asynInt32      r/o    SD_RECV_MISSED       $(P)$(R)ReceiverMissedPackets_RBV Number of packets missed
-SDHighVoltage             asynInt32      r/w    SD_HIGH_VOLTAGE      $(P)$(R)HighVoltage       Detector high voltage
-SDNumCycles               asynInt32      r/w    SD_NCYCLES           $(P)$(R)NumCycles         Number of triggeres
-SDNumFrames               asynInt32      r/w    SD_NFRAMES           $(P)$(R)NumFrames         Number of frames to acquire for each trigger
-SDSetupFile               asynOctet      r/w    SD_SETUP_FILE        $(P)$(R)SetupFile         Detector setup from file
-SDLoadSetup               asynInt32      r/w    SD_LOAD_SETUP        $(P)$(R)LoadSetup         Load detector setup from file
-SDCommand                 asynOctet      r/w    SD_COMMAND           $(P)$(R)Command           Direct command to detector
-SDUseDataCallback         asynInt32      r/w    SD_USE_DATA_CALLBACK $(R)$(R)UseDataCallback   Enable disable client data callback
-========================  ============== ====== ===================  =======================   ============
+========================  ============== ====== ====================  =================================  ============
+Parameter index variable  asyn interface Access drvInfo string        EPICS record name                  Description
+========================  ============== ====== ====================  =================================  ============
+DetectorType              asynInt32      r/o    SD_DETECTOR_TYPE      $(P)$(R)DetectorType_RBV           Detector type enum
+SDSetting                 asynInt32      r/w    SD_SETTING            $(P)$(R)Setting                    Detector settings
+SDBitDepth                asynInt32      r/w    SD_BIT_DEPTH          $(P)$(R)BitDepth                   Dynamic range
+SDTimingMode              asynInt32      r/w    SD_TMODE              $(P)$(R)TimingMode                 External signal communication mode, triggering, gating
+SDTriggerSoftware         asynInt32      r/w    SD_TRIGGER_SOFTWARE   $(P)$(R)TriggerSoftware            Send software trigger
+SDDelayTime               asynFloat64    r/w    SD_DELAY_TIME         $(P)$(R)DelayTime                  Delay in seconds between external trigger and the start of image acquisition
+SDRecvMode                asynInt32      r/w    SD_RECV_MODE          $(P)$(R)ReceiverMode               Receiver data callback frequency
+SDRecvStream              asynInt32      r/w    SD_RECV_STREAM        $(P)$(R)ReceiverStream             Enable/disable receiver stream
+SDRecvStatus              asynInt32      r/o    SD_RECV_STATUS        $(P)$(R)ReceiverState_RBV          Receiver status
+SDRecvMissed              asynInt32      r/o    SD_RECV_MISSED        $(P)$(R)ReceiverMissedPackets_RBV  Number of packets missed
+SDHighVoltage             asynInt32      r/w    SD_HIGH_VOLTAGE       $(P)$(R)HighVoltage                Detector high voltage
+SDNumCycles               asynInt32      r/w    SD_NCYCLES            $(P)$(R)NumCycles                  Number of triggeres
+SDNumFrames               asynInt32      r/w    SD_NFRAMES            $(P)$(R)NumFrames                  Number of frames to acquire for each trigger
+SDSetupFile               asynOctet      r/w    SD_SETUP_FILE         $(P)$(R)SetupFile                  Detector setup from file
+SDLoadSetup               asynInt32      r/w    SD_LOAD_SETUP         $(P)$(R)LoadSetup                  Load detector setup from file
+SDCommand                 asynOctet      r/w    SD_COMMAND            $(P)$(R)Command                    Direct command to detector
+SDUseDataCallback         asynInt32      r/w    SD_USE_DATA_CALLBACK  $(R)$(R)UseDataCallback            Enable disable client data callback
+========================  ============== ====== ====================  =================================  ============
 
 Eiger specific
 
@@ -66,14 +66,14 @@ SDTrimbits                asynInt32      r/w    SD_TRIMBITS          $(P)$(R)Tri
 
 Mythen3 specific
 
-========================  ==============     ====== ====================  =======================   ============
-Parameter index variable  asyn interface     Access drvInfo string        EPICS record name         Description
-========================  ==============     ====== ====================  =======================   ============
-SDNumGates                asynInt32          r/w    SD_NGATES             $(P)$(R)NumGates          Number of gates if timing mode is gating
-SDCounterMask             asynUInt32Digital  r/w    SD_COUNTER_MASK       $(P)$(R)CounterMask       Mask of counters used
-SDGate\ *n*\ Delay        asynFloat64        r/w    SD_GATE\ *n*\ _DELAY  $(P)$(R)Gate\ *n*\ Delay  Gate\ *n* delay in seconds
-SDGate\ *n*\ Width        asynFloat64        r/w    SD_GATE\ *n*\ _WIDTH  $(P)$(R)Gate\ *n*\ Width  Gate\ *n* width in seconds
-========================  ==============     ====== ====================  =======================   ============
+========================  ================= ====== ====================  ========================  ============
+Parameter index variable  asyn interface    Access drvInfo string        EPICS record name         Description
+========================  ================= ====== ====================  ========================  ============
+SDNumGates                asynInt32         r/w    SD_NGATES             $(P)$(R)NumGates          Number of gates if timing mode is gating
+SDCounterMask             asynUInt32Digital r/w    SD_COUNTER_MASK       $(P)$(R)CounterMask       Mask of counters used
+SDGate\ *n*\ Delay        asynFloat64       r/w    SD_GATE\ *n*\ _DELAY  $(P)$(R)Gate\ *n*\ Delay  Gate\ *n* delay in seconds
+SDGate\ *n*\ Width        asynFloat64       r/w    SD_GATE\ *n*\ _WIDTH  $(P)$(R)Gate\ *n*\ Width  Gate\ *n* width in seconds
+========================  ================= ====== ====================  ========================  ============
 
 
 Configuration
