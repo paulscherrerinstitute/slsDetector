@@ -1,7 +1,7 @@
 
 file {
 	name="/afs/psi.ch/group/8435/wang/epics_driver_modules/slsDetector/slsDetectorApp/op/adl/slsDetectorMYTHEN3.adl"
-	version=030105
+	version=030115
 }
 display {
 	object {
@@ -389,8 +389,8 @@ text {
 }
 text {
 	object {
-		x=15
-		y=83
+		x=40
+		y=36
 		width=100
 		height=20
 	}
@@ -401,23 +401,24 @@ text {
 }
 byte {
 	object {
-		x=122
-		y=54
-		width=75
-		height=25
+		x=41
+		y=70
+		width=20
+		height=70
 	}
 	monitor {
 		chan="$(P)$(R)CounterMask_RBV"
 		clr=15
 		bclr=4
 	}
+	direction="down"
 	sbit=0
 	ebit=2
 }
 composite {
 	object {
-		x=123
-		y=84
+		x=16
+		y=72
 		width=23
 		height=20
 	}
@@ -425,8 +426,8 @@ composite {
 	children {
 		"message button" {
 			object {
-				x=123
-				y=84
+				x=16
+				y=72
 				width=23
 				height=20
 			}
@@ -446,8 +447,8 @@ composite {
 }
 composite {
 	object {
-		x=123
-		y=84
+		x=16
+		y=72
 		width=23
 		height=20
 	}
@@ -455,8 +456,8 @@ composite {
 	children {
 		"message button" {
 			object {
-				x=123
-				y=84
+				x=16
+				y=72
 				width=23
 				height=20
 			}
@@ -476,8 +477,8 @@ composite {
 }
 composite {
 	object {
-		x=148
-		y=84
+		x=16
+		y=95
 		width=23
 		height=20
 	}
@@ -485,8 +486,8 @@ composite {
 	children {
 		"message button" {
 			object {
-				x=148
-				y=84
+				x=16
+				y=95
 				width=23
 				height=20
 			}
@@ -506,8 +507,8 @@ composite {
 }
 composite {
 	object {
-		x=148
-		y=84
+		x=16
+		y=95
 		width=23
 		height=20
 	}
@@ -515,8 +516,8 @@ composite {
 	children {
 		"message button" {
 			object {
-				x=148
-				y=84
+				x=16
+				y=95
 				width=23
 				height=20
 			}
@@ -536,8 +537,8 @@ composite {
 }
 composite {
 	object {
-		x=173
-		y=84
+		x=16
+		y=117
 		width=23
 		height=20
 	}
@@ -545,8 +546,8 @@ composite {
 	children {
 		"message button" {
 			object {
-				x=173
-				y=84
+				x=16
+				y=117
 				width=23
 				height=20
 			}
@@ -566,8 +567,8 @@ composite {
 }
 composite {
 	object {
-		x=173
-		y=84
+		x=16
+		y=117
 		width=23
 		height=20
 	}
@@ -575,8 +576,8 @@ composite {
 	children {
 		"message button" {
 			object {
-				x=173
-				y=84
+				x=16
+				y=117
 				width=23
 				height=20
 			}
@@ -592,5 +593,228 @@ composite {
 	"dynamic attribute" {
 		vis="if not zero"
 		chan="$(P)$(R)CounterMask_RBV.B2"
+	}
+}
+text {
+	object {
+		x=8
+		y=170
+		width=180
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Threshold (eV):"
+	align="horiz. right"
+}
+text {
+	object {
+		x=8
+		y=198
+		width=180
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Beam Energy (eV):"
+	align="horiz. right"
+}
+text {
+	object {
+		x=8
+		y=230
+		width=180
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Trimbits:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=193
+		y=230
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)Trimbits"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=262
+		y=231
+		width=60
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)Trimbits_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=262
+		y=198
+		width=60
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)BeamEnergy_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. right"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=194
+		y=198
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)BeamEnergy"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=194
+		y=170
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)ThresholdEnergy"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=262
+		y=172
+		width=60
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ThresholdEnergy_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. right"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=69
+		y=70
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)Counter1Threshold"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=137
+		y=72
+		width=60
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)Counter1Threshold_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. right"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=69
+		y=96
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)Counter2Threshold"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=137
+		y=98
+		width=60
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)Counter2Threshold_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. right"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=69
+		y=120
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P)$(R)Counter3Threshold"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=137
+		y=122
+		width=60
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)Counter3Threshold_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. right"
+	limits {
 	}
 }

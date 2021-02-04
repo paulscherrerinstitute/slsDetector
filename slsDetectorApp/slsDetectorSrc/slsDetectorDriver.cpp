@@ -58,6 +58,9 @@ static const char *driverName = "slsDetectorDriver";
 #define SDGate1WidthString      "SD_GATE1_WIDTH"
 #define SDGate2WidthString      "SD_GATE2_WIDTH"
 #define SDGate3WidthString      "SD_GATE3_WIDTH"
+#define SDCounter1ThresholdString      "SD_CNT1_THRESHOLD"
+#define SDCounter2ThresholdString      "SD_CNT2_THRESHOLD"
+#define SDCounter3ThresholdString      "SD_CNT3_THRESHOLD"
 #define SDSetupFileString       "SD_SETUP_FILE"
 #define SDLoadSetupString       "SD_LOAD_SETUP"
 
@@ -120,6 +123,9 @@ public:
     int SDGate1Width;
     int SDGate2Width;
     int SDGate3Width;
+    int SDCounter1Threshold;
+    int SDCounter2Threshold;
+    int SDCounter3Threshold;
     int SDSetupFile;
     int SDLoadSetup;
     #define LAST_SD_PARAM SDLoadSetup
@@ -291,14 +297,33 @@ void slsDetectorDriver::dataCallback(detectorData *pData)
     int arrayCallbacks;
     epicsTimeStamp timeStamp;
     epicsInt32 colorMode = NDColorModeMono;
+    epicsUInt32 counterMask = 1;
+    epicsInt32 detectorType = slsDetectorDefs::GENERIC;
     const char *functionName = "dataCallback";
 
     if (pData == NULL || pData->data == NULL) return;
 
     this ->lock();
+    getUIntDigitalParam(SDCounterMask, &counterMask, 0x07);
+    getIntegerParam(SDDetectorType, &detectorType);
 
     dims[0] = pData->nx;
     dims[1] = pData->ny;
+
+    if (detectorType == slsDetectorDefs::MYTHEN3) {
+        switch (counterMask) {
+        case 3:
+        case 5:
+        case 6:
+            dims[0] = 2;
+            dims[1] = pData->nx  / 2;
+            break;
+        case 7:
+            dims[0] = 3;
+            dims[1] = pData->nx  / 3;
+            break;
+        }
+    }
 
     totalBytes = pData->databytes;
     switch (pData->dynamicRange / 8) {
@@ -407,6 +432,9 @@ asynStatus slsDetectorDriver::writeUInt32Digital(asynUser *pasynUser, epicsUInt3
     try {
     if (function == SDCounterMask) {
         pDetector->setCounterMask(value & mask, positions);
+        auto counter = pDetector->getCounterMask();
+        for (size_t i=0; i<counter.size(); i++)
+            setUIntDigitalParam(i, SDCounterMask, counter[i], 0x07);
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM)
@@ -557,21 +585,47 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         SetDetectorParam(NDFileNumber, Integer, pDetector->getAcquisitionIndex());
     } else if (function == SDSetting ||
                function == SDThreshold ||
+               function == SDCounter1Threshold || function == SDCounter2Threshold || function == SDCounter3Threshold ||
                function == SDEnergy ||
                function == SDTrimbits) {
-        if (pDetector->getDetectorType().squash(slsDetectorDefs::GENERIC) == slsDetectorDefs::EIGER) {
-            int threshold;
+        auto detectorType = pDetector->getDetectorType().squash(slsDetectorDefs::GENERIC);
+        if (detectorType == slsDetectorDefs::EIGER || detectorType == slsDetectorDefs::MYTHEN3) {
+            int threshold, threshold1, threshold2, threshold3;
             int setting;
             int trimbits;
             getIntegerParam(SDThreshold, &threshold);
+            getIntegerParam(SDCounter1Threshold, &threshold1);
+            getIntegerParam(SDCounter2Threshold, &threshold2);
+            getIntegerParam(SDCounter3Threshold, &threshold3);
             getIntegerParam(SDSetting, &setting);
             getIntegerParam(SDTrimbits, &trimbits);
 
             /* Threshold energy is automatically set to half of the beam energy */
             if (function == SDEnergy) threshold = value / 2;
 
-            pDetector->setThresholdEnergy(threshold, slsDetectorDefs::detectorSettings(setting), trimbits, positions);
-            SetDetectorParam(SDThreshold, Integer, pDetector->getThresholdEnergy());
+            if (detectorType == slsDetectorDefs::EIGER) {
+                pDetector->setThresholdEnergy(threshold, slsDetectorDefs::detectorSettings(setting), trimbits, positions);
+                SetDetectorParam(SDThreshold, Integer, pDetector->getThresholdEnergy());
+            } else if (detectorType == slsDetectorDefs::MYTHEN3) {
+                std::array<int, 3> thresholds = {threshold1, threshold2, threshold3};
+                if (threshold != -1 && (function == SDEnergy || function == SDThreshold))
+                    thresholds.fill(threshold);
+                pDetector->setThresholdEnergy(thresholds, slsDetectorDefs::detectorSettings(setting), trimbits, positions);
+                /* Read back */
+                {
+                    auto result = pDetector->getAllThresholdEnergy();
+                    for (size_t i=0; i<result.size(); i++) {
+                        status |= setIntegerParam(i, SDCounter1Threshold, result[i][0]);
+                        status |= setIntegerParam(i, SDCounter2Threshold, result[i][1]);
+                        status |= setIntegerParam(i, SDCounter3Threshold, result[i][2]);
+                        if (sls::allEqual(result[i]))
+                            status |= setIntegerParam(i, SDThreshold, result[i][0]);
+                        else
+                            status |= setIntegerParam(i, SDThreshold, -1);
+                        }
+                }
+            }
+
             SetDetectorParam(SDSetting, Integer, pDetector->getSettings());
         } else {
             if (function == SDSetting && value != -1) {
@@ -916,6 +970,9 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDGate1WidthString,     asynParamFloat64,&SDGate1Width);
     createParam(SDGate2WidthString,     asynParamFloat64,&SDGate2Width);
     createParam(SDGate3WidthString,     asynParamFloat64,&SDGate3Width);
+    createParam(SDCounter1ThresholdString, asynParamInt32, &SDCounter1Threshold);
+    createParam(SDCounter2ThresholdString, asynParamInt32, &SDCounter2Threshold);
+    createParam(SDCounter3ThresholdString, asynParamInt32, &SDCounter3Threshold);
     createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile);
     createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup);
 
@@ -938,8 +995,9 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     }
 
     /* Set some default values for parameters */
+    auto detectorType = pDetector->getDetectorType().squash(slsDetectorDefs::GENERIC);
     status =  setStringParam (ADManufacturer, "SLS Detector Group");
-    status |= setStringParam (ADModel, sls::ToString(pDetector->getDetectorType().squash(slsDetectorDefs::GENERIC)).c_str());
+    status |= setStringParam (ADModel, sls::ToString(detectorType).c_str());
     SetDetectorParam(SDDetectorType,Integer,  pDetector->getDetectorType());
     status |= setStringParam (ADSDKVersion, pDetector->getPackageVersion().c_str());
     auto serialNumbers = pDetector->getSerialNumber();
@@ -963,6 +1021,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     status |= setIntegerParam(ADImageMode, ADImageSingle);
 
+    status |= setIntegerParam(SDTrimbits, 1);
+
     auto temps = pDetector->getTemperatureList();
     if (temps.empty())
         tempDacIndex = -1;
@@ -981,6 +1041,28 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     status |= setIntegerParam(ADStatus, pDetector->getDetectorStatus().squash(slsDetectorDefs::ERROR));
     SetDetectorParam(SDRecvStatus, Integer, pDetector->getReceiverStatus());
+
+    /* Most detectors support Settings. But don't fail if one doesn't  */
+    try { SetDetectorParam(SDSetting, Integer, pDetector->getSettings()); } catch (...) {}
+
+    if (detectorType == slsDetectorDefs::EIGER) {
+        SetDetectorParam(SDThreshold, Integer, pDetector->getThresholdEnergy());
+    }
+    if (detectorType == slsDetectorDefs::MYTHEN3) {
+        auto threshold = pDetector->getAllThresholdEnergy();
+        for (size_t i=0; i<threshold.size(); i++) {
+            setIntegerParam(i, SDCounter1Threshold, threshold[i][0]);
+            setIntegerParam(i, SDCounter2Threshold, threshold[i][1]);
+            setIntegerParam(i, SDCounter3Threshold, threshold[i][2]);
+            if (sls::allEqual(threshold[i]))
+                status |= setIntegerParam(i, SDThreshold, threshold[i][0]);
+            else
+                status |= setIntegerParam(i, SDThreshold, -1);
+        }
+        auto counter = pDetector->getCounterMask();
+        for (size_t i=0; i<counter.size(); i++)
+            setUIntDigitalParam(i, SDCounterMask, counter[i], 0x07);
+    }
     }
     catch (const std::exception &e) {
         status = asynError;

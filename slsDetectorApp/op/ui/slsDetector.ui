@@ -5190,6 +5190,7 @@ border-radius: 2px;
      <enum>caLineEdit::decimal</enum>
     </property>
    </widget>
+   <zorder>caRectangle_12</zorder>
    <zorder>caInclude_1</zorder>
    <zorder>caRectangle_0</zorder>
    <zorder>caRectangle_1</zorder>
@@ -5239,7 +5240,6 @@ border-radius: 2px;
    <zorder>caLabel_37</zorder>
    <zorder>caFrame_23</zorder>
    <zorder>caLabel_38</zorder>
-   <zorder>caRectangle_12</zorder>
    <zorder>caLabel_39</zorder>
    <zorder>caFrame_24</zorder>
    <zorder>caFrame_25</zorder>

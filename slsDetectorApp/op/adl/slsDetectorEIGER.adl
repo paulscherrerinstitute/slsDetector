@@ -1,7 +1,7 @@
 
 file {
-	name="/afs/psi.ch/user/w/wang_x1/epics_driver_modules/slsDetector/slsDetectorApp/op/adl/slsDetectorEIGER.adl"
-	version=030105
+	name="/afs/psi.ch/group/8435/wang/epics_driver_modules/slsDetector/slsDetectorApp/op/adl/slsDetectorEIGER.adl"
+	version=030115
 }
 display {
 	object {
@@ -125,22 +125,22 @@ text {
 }
 text {
 	object {
-		x=4
+		x=8
 		y=119
-		width=120
+		width=180
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Trimbits"
+	textix="Trimbits:"
 	align="horiz. right"
 }
 menu {
 	object {
-		x=132
+		x=193
 		y=119
-		width=90
+		width=60
 		height=20
 	}
 	control {
@@ -151,9 +151,9 @@ menu {
 }
 "text update" {
 	object {
-		x=228
+		x=262
 		y=120
-		width=90
+		width=60
 		height=18
 	}
 	monitor {
@@ -195,9 +195,9 @@ text {
 }
 "text update" {
 	object {
-		x=258
+		x=262
 		y=87
-		width=63
+		width=60
 		height=18
 	}
 	monitor {
@@ -211,9 +211,9 @@ text {
 }
 "text update" {
 	object {
-		x=259
+		x=262
 		y=61
-		width=63
+		width=60
 		height=18
 	}
 	monitor {
@@ -242,9 +242,9 @@ text {
 }
 text {
 	object {
-		x=29
+		x=8
 		y=59
-		width=160
+		width=180
 		height=20
 	}
 	"basic attribute" {

@@ -18,6 +18,9 @@ $(P)$(R)Gate3Width
 $(P)$(R)Gate1Delay
 $(P)$(R)Gate2Delay
 $(P)$(R)Gate3Delay
+$(P)$(R)Counter1Threshold
+$(P)$(R)Counter2Threshold
+$(P)$(R)Counter3Threshold
 $(P)$(R)CounterMask
 file "ADBase_settings.req", P=$(P), R=$(R)
 file "NDFile_settings.req", P=$(P), R=$(R)

@@ -4,6 +4,25 @@
 include "ADBase.template"
 include "NDFile.template"
 
+# Override records in ADBase.template
+# increase time precsion to microsecond
+record(ao, "$(P)$(R)AcquireTime")
+{
+    field (PREC, "6")
+}
+record(ai, "$(P)$(R)AcquireTime_RBV")
+{
+    field (PREC, "6")
+}
+record(ao, "$(P)$(R)AcquirePeriod")
+{
+    field (PREC, "6")
+}
+record(ai, "$(P)$(R)AcquirePeriod_RBV")
+{
+    field (PREC, "6")
+}
+
 # template for slsDetector driver
 #----------------------------------
 # Detector Type
@@ -517,7 +536,6 @@ record(ao, "$(P)$(R)Gate1Width")
     field (EGU,  "s")
     field (PREC, "6")
     field (VAL,  "0.1")
-    field (PINI, "YES")
 }
 record(ai, "$(P)$(R)Gate1Width_RBV")
 {
@@ -536,7 +554,6 @@ record(ao, "$(P)$(R)Gate2Width")
     field (EGU,  "s")
     field (PREC, "6")
     field (VAL,  "0.1")
-    field (PINI, "YES")
 }
 record(ai, "$(P)$(R)Gate2Width_RBV")
 {
@@ -555,7 +572,6 @@ record(ao, "$(P)$(R)Gate3Width")
     field (EGU,  "s")
     field (PREC, "6")
     field (VAL,  "0.1")
-    field (PINI, "YES")
 }
 record(ai, "$(P)$(R)Gate3Width_RBV")
 {
@@ -564,5 +580,56 @@ record(ai, "$(P)$(R)Gate3Width_RBV")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_GATE3_WIDTH")
     field(EGU,  "s")
     field(PREC, "6")
+    field(SCAN, "I/O Intr")
+}
+#----------------------------------
+# Counters' Threshold  (Mythen 3)
+#----------------------------------
+record(longout, "$(P)$(R)Counter1Threshold")
+{
+    field (DESC, "Counter 1 threshold")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_CNT1_THRESHOLD")
+    field (VAL,  "4000")
+    field (EGU,  "eV")
+}
+record(longin, "$(P)$(R)Counter1Threshold_RBV")
+{
+    field(DESC, "Counter 1 threshold")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_CNT1_THRESHOLD")
+    field(EGU,  "eV")
+    field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)Counter2Threshold")
+{
+    field (DESC, "Counter 2 threshold")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_CNT2_THRESHOLD")
+    field (VAL,  "4000")
+    field (EGU,  "eV")
+}
+record(longin, "$(P)$(R)Counter2Threshold_RBV")
+{
+    field(DESC, "Counter 2 threshold")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_CNT2_THRESHOLD")
+    field(EGU,  "eV")
+    field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)Counter3Threshold")
+{
+    field (DESC, "Counter 3 threshold")
+    field (DTYP, "asynInt32")
+    field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_CNT3_THRESHOLD")
+    field (VAL,  "4000")
+    field (EGU,  "eV")
+}
+record(longin, "$(P)$(R)Counter3Threshold_RBV")
+{
+    field(DESC, "Counter 3 threshold")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SD_CNT3_THRESHOLD")
+    field(EGU,  "eV")
     field(SCAN, "I/O Intr")
 }
