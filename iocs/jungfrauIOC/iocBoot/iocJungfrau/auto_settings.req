@@ -1,5 +1,4 @@
 file "slsDetector_settings.req",    P=$(P),  R=cam1:
 file "NDStdArrays_settings.req",    P=$(P),  R=image1:
-file "NDPluginBase_settings.req",   P=$(P),  R=ZMQ1:
-#file "commonPlugin_settings.req",   P=$(P)
+file "commonPlugin_settings.req",   P=$(P)
 
