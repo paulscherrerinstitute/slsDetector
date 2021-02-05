@@ -54,7 +54,7 @@ SDCommand                 asynOctet      r/w    SD_COMMAND            $(P)$(R)Co
 SDUseDataCallback         asynInt32      r/w    SD_USE_DATA_CALLBACK  $(R)$(R)UseDataCallback            Enable disable client data callback
 ========================  ============== ====== ====================  =================================  ============
 
-Eiger specific
+Eiger and Mythen3 specific
 
 ========================  ============== ====== ===================  =======================   ============
 Parameter index variable  asyn interface Access drvInfo string       EPICS record name         Description
@@ -66,14 +66,15 @@ SDTrimbits                asynInt32      r/w    SD_TRIMBITS          $(P)$(R)Tri
 
 Mythen3 specific
 
-========================  ================= ====== ====================  ========================  ============
-Parameter index variable  asyn interface    Access drvInfo string        EPICS record name         Description
-========================  ================= ====== ====================  ========================  ============
-SDNumGates                asynInt32         r/w    SD_NGATES             $(P)$(R)NumGates          Number of gates if timing mode is gating
-SDCounterMask             asynUInt32Digital r/w    SD_COUNTER_MASK       $(P)$(R)CounterMask       Mask of counters used
-SDGate\ *n*\ Delay        asynFloat64       r/w    SD_GATE\ *n*\ _DELAY  $(P)$(R)Gate\ *n*\ Delay  Gate\ *n* delay in seconds
-SDGate\ *n*\ Width        asynFloat64       r/w    SD_GATE\ *n*\ _WIDTH  $(P)$(R)Gate\ *n*\ Width  Gate\ *n* width in seconds
-========================  ================= ====== ====================  ========================  ============
+=========================  ================= ====== =======================  ===============================  ============
+Parameter index variable   asyn interface    Access drvInfo string           EPICS record name                Description
+=========================  ================= ====== =======================  ===============================  ============
+SDNumGates                 asynInt32         r/w    SD_NGATES                $(P)$(R)NumGates                 Number of gates if timing mode is gating
+SDCounterMask              asynUInt32Digital r/w    SD_COUNTER_MASK          $(P)$(R)CounterMask              Mask of counters used
+SDGate\ *n*\ Delay         asynFloat64       r/w    SD_GATE\ *n*\ _DELAY     $(P)$(R)Gate\ *n*\ Delay         Gate\ *n* delay in seconds
+SDGate\ *n*\ Width         asynFloat64       r/w    SD_GATE\ *n*\ _WIDTH     $(P)$(R)Gate\ *n*\ Width         Gate\ *n* width in seconds
+SDCounter\ *n*\ Threshold  asynInt32         r/w    SD_CNT\ *n*\ _THRESHOLD  $(P)$(R)Counter\ *n*\ Threshold  Counter\ *n* threshold in eV
+=========================  ================= ====== =======================  ===============================  ============
 
 
 Configuration
