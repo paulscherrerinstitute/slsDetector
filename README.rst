@@ -91,7 +91,7 @@ Configuration
     #                                 allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
     #               maxMemory)      # The maximum amount of memory that the NDArrayPool for this driver is 
     #                                 allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
-    slsDetectorConfig("SD1", "cfg/mcs1x21.config", 0, -1, -1)
+    slsDetectorConfig("SD1", "cfg/mcs1x21.config", 0, 1, -1, -1)
 
 
 Release Notes
