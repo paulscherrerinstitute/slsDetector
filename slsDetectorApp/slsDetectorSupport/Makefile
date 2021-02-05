@@ -5,6 +5,7 @@ include $(TOP)/configure/CONFIG
 #=============================
 
 INC += sls/Detector.h
+INC += sls/Pattern.h
 INC += sls/Result.h
 INC += sls/TimeHelper.h
 INC += sls/ToString.h
