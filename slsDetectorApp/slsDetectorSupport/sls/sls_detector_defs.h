@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-other
+// Copyright (C) 2021 Contributors to the SLS Detector Package
 #pragma once
 /************************************************
  * @file sls_detector_defs.h
@@ -32,10 +34,14 @@
 #define MAX_RX_DBIT 64
 
 /** default ports */
-#define DEFAULT_PORTNO        1952
-#define DEFAULT_UDP_PORTNO    50001
-#define DEFAULT_ZMQ_CL_PORTNO 30001
-#define DEFAULT_ZMQ_RX_PORTNO 30001
+#define DEFAULT_PORTNO         1952
+#define DEFAULT_UDP_PORTNO     50001
+#define DEFAULT_ZMQ_CL_PORTNO  30001
+#define DEFAULT_ZMQ_RX_PORTNO  30001
+#define DEFAULT_UDP_SRC_PORTNO 32410
+#define DEFAULT_UDP_DST_PORTNO 50001
+
+#define MAX_UDP_DESTINATION 32
 
 #define SLS_DETECTOR_HEADER_VERSION      0x2
 #define SLS_DETECTOR_JSON_HEADER_VERSION 0x4
@@ -50,7 +56,8 @@
 #define MAX_TRIMEN 100
 
 /** maximum unit size of program sent to detector */
-#define MAX_FPGAPROGRAMSIZE (2 * 1024 * 1024)
+//#define MAX_FPGAPROGRAMSIZE (2 * 1024 * 1024)
+#define MAX_FPGAPROGRAMSIZE (128 * 1024)
 
 #define GET_FLAG -1
 
@@ -345,11 +352,9 @@ typedef struct {
         LOWGAIN,
         MEDIUMGAIN,
         VERYHIGHGAIN,
-        DYNAMICHG0,
+        HIGHGAIN0,
         FIXGAIN1,
         FIXGAIN2,
-        FORCESWITCHG1,
-        FORCESWITCHG2,
         VERYLOWGAIN,
         G1_HIGHGAIN,
         G1_LOWGAIN,
@@ -359,6 +364,7 @@ typedef struct {
         G2_LOWCAP_LOWGAIN,
         G4_HIGHGAIN,
         G4_LOWGAIN,
+        GAIN0,
         UNDEFINED = 200,
         UNINITIALIZED
     };
@@ -373,10 +379,13 @@ typedef struct {
     enum readoutMode { ANALOG_ONLY, DIGITAL_ONLY, ANALOG_AND_DIGITAL };
 
     /** chip speed */
-    enum speedLevel { FULL_SPEED, HALF_SPEED, QUARTER_SPEED };
-
-    /** hierarchy in multi-detector structure, if any */
-    enum masterFlags { NO_MASTER, IS_MASTER, IS_SLAVE };
+    enum speedLevel {
+        FULL_SPEED,
+        HALF_SPEED,
+        QUARTER_SPEED,
+        G2_108MHZ,
+        G2_144MHZ
+    };
 
     /**
      * burst mode for gotthard2
@@ -393,6 +402,40 @@ typedef struct {
      * timing source for gotthard2
      */
     enum timingSourceType { TIMING_INTERNAL, TIMING_EXTERNAL };
+
+    // gain caps Mythen3
+    enum M3_GainCaps {
+        M3_C10pre = 1 << 7,
+        M3_C15sh = 1 << 10,
+        M3_C30sh = 1 << 11,
+        M3_C50sh = 1 << 12,
+        M3_C225ACsh = 1 << 13,
+        M3_C15pre = 1 << 14,
+    };
+
+    enum portPosition { LEFT, RIGHT, TOP, BOTTOM };
+
+#ifdef __cplusplus
+    enum class streamingInterface {
+#else
+enum streamingInterface {
+#endif
+        NONE = 0,
+        LOW_LATENCY_LINK = 1 << 0,
+        ETHERNET_10GB = 1 << 1,
+        ALL = LOW_LATENCY_LINK | ETHERNET_10GB
+    };
+
+    enum vetoAlgorithm { ALG_HITS, ALG_RAW };
+
+    enum gainMode {
+        DYNAMIC,
+        FORCE_SWITCH_G1,
+        FORCE_SWITCH_G2,
+        FIX_G1,
+        FIX_G2,
+        FIX_G0
+    };
 
 #ifdef __cplusplus
 
@@ -426,13 +469,47 @@ typedef struct {
         }
     } __attribute__((packed));
 
+    struct currentSrcParameters {
+        int enable;
+        int fix;
+        int normal;
+        uint64_t select;
+
+        /** [Gotthard2][Jungfrau] disable */
+        currentSrcParameters() : enable(0), fix(-1), normal(-1), select(0) {}
+
+        /** [Gotthard2] enable or disable */
+        explicit currentSrcParameters(bool srcEnable)
+            : enable(static_cast<int>(srcEnable)), fix(-1), normal(-1),
+              select(0) {}
+
+        /** [Jungfrau](chipv1.0) enable current src with fix or no fix,
+         * select is 0 to 63 columns only */
+        currentSrcParameters(bool fixCurrent, uint64_t selectCurrent)
+            : enable(1), fix(static_cast<int>(fixCurrent)), normal(-1),
+              select(selectCurrent) {}
+
+        /** [Jungfrau](chipv1.1) enable current src, fix[fix|no fix],
+         * select is a mask of 63 bits (muliple columns can be selected
+         * simultaneously, normal [normal|low] */
+        currentSrcParameters(bool fixCurrent, uint64_t selectCurrent,
+                             bool normalCurrent)
+            : enable(1), fix(static_cast<int>(fixCurrent)),
+              normal(static_cast<int>(normalCurrent)), select(selectCurrent) {}
+
+        bool operator==(const currentSrcParameters &other) const {
+            return ((enable == other.enable) && (fix == other.fix) &&
+                    (normal == other.normal) && (select == other.select));
+        }
+    } __attribute__((packed));
+
     /**
      * structure to udpate receiver
      */
     struct rxParameters {
         detectorType detType{GENERIC};
-        xy numberOfDetector;
-        int moduleId{0};
+        xy numberOfModule;
+        int moduleIndex{0};
         char hostname[MAX_STR_LENGTH];
         int udpInterfaces{1};
         int udp_dstport{0};
@@ -452,8 +529,10 @@ typedef struct {
         int64_t subExpTimeNs{0};
         int64_t subDeadTimeNs{0};
         int activate{0};
+        int dataStreamLeft{0};
+        int dataStreamRight{0};
         int quad{0};
-        int numLinesReadout{0};
+        int readNRows{0};
         int thresholdEnergyeV[3]{0, 0, 0};
         int dynamicRange{16};
         timingMode timMode{AUTO_TIMING};
@@ -485,8 +564,20 @@ typedef struct {
 
 #ifdef __cplusplus
 };
+inline slsDetectorDefs::streamingInterface
+operator|(const slsDetectorDefs::streamingInterface &a,
+          const slsDetectorDefs::streamingInterface &b) {
+    return slsDetectorDefs::streamingInterface(static_cast<int32_t>(a) |
+                                               static_cast<int32_t>(b));
+};
+
+inline slsDetectorDefs::streamingInterface
+operator&(const slsDetectorDefs::streamingInterface &a,
+          const slsDetectorDefs::streamingInterface &b) {
+    return slsDetectorDefs::streamingInterface(static_cast<int32_t>(a) &
+                                               static_cast<int32_t>(b));
+};
 #endif
-;
 
 #ifdef __cplusplus
 struct detParameters {
@@ -625,6 +716,7 @@ typedef struct {
 #endif
 
 #ifdef __cplusplus
+
 // TODO! discuss this
 #include <vector> //hmm... but currently no way around
 namespace sls {

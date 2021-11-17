@@ -22,5 +22,7 @@ $(P)$(R)Counter1Threshold
 $(P)$(R)Counter2Threshold
 $(P)$(R)Counter3Threshold
 $(P)$(R)CounterMask
+$(P)$(R)JsonFrameMode
+$(P)$(R)JsonDetectorMode
 file "ADBase_settings.req", P=$(P), R=$(R)
 file "NDFile_settings.req", P=$(P), R=$(R)

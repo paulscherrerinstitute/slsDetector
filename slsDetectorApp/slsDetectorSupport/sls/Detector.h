@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-other
+// Copyright (C) 2021 Contributors to the SLS Detector Package
 #pragma once
 #include "sls/Pattern.h"
 #include "sls/Result.h"
@@ -19,7 +21,7 @@ class IpAddr;
 // Free function to avoid dependence on class
 // and avoid the option to free another objects
 // shm by mistake
-void freeSharedMemory(int multiId, int detPos = -1);
+void freeSharedMemory(int detectorIndex, int moduleIndex = -1);
 
 /**
  * \class Detector
@@ -28,6 +30,14 @@ class Detector {
     std::unique_ptr<DetectorImpl> pimpl;
 
   public:
+    /** @name Configuration */
+    ///@{
+    /**************************************************
+     *                                                *
+     *    Configuration                               *
+     *                                                *
+     * ************************************************/
+
     /**
      * @param shm_id detector shared memory id
      * Default value is 0. Can be set to more values for
@@ -36,13 +46,6 @@ class Detector {
      */
     Detector(int shm_id = 0);
     ~Detector();
-    /** @name Configuration */
-    ///@{
-    /**************************************************
-     *                                                *
-     *    Configuration                               *
-     *                                                *
-     * ************************************************/
 
     /** Free the shared memory of this detector and all modules
     belonging to it */
@@ -78,7 +81,12 @@ class Detector {
 
     Result<int64_t> getDetectorServerVersion(Positions pos = {}) const;
 
+    /* [Jungfrau][Gotthard][Mythen3][Gotthard2][CTB][Moench] */
     Result<int64_t> getSerialNumber(Positions pos = {}) const;
+
+    /** [Eiger][Gotthard2][Mythen3] 6 bit value (ideally unique) that is
+     * streamed out in the UDP header of the detector.*/
+    Result<int> getModuleId(Positions pos = {}) const;
 
     Result<int64_t> getReceiverVersion(Positions pos = {}) const;
 
@@ -113,8 +121,7 @@ class Detector {
     /** [Jungfrau][Gotthard][Gotthard2][Mythen3] */
     Result<defs::detectorSettings> getSettings(Positions pos = {}) const;
 
-    /** [Jungfrau] DYNAMICGAIN, DYNAMICHG0, FIXGAIN1, FIXGAIN2,
-     * FORCESWITCHG1, FORCESWITCHG2 \n [Gotthard] DYNAMICGAIN, HIGHGAIN,
+    /** [Jungfrau] GAIN0, HIGHGAIN0 \n [Gotthard] DYNAMICGAIN, HIGHGAIN,
      * LOWGAIN, MEDIUMGAIN, VERYHIGHGAIN \n [Gotthard2] DYNAMICGAIN,
      * FIXGAIN1, FIXGAIN2 \n [Moench] G1_HIGHGAIN, G1_LOWGAIN,
      * G2_HIGHCAP_HIGHGAIN, G2_HIGHCAP_LOWGAIN, G2_LOWCAP_HIGHGAIN,
@@ -173,8 +180,19 @@ class Detector {
      */
     void setGapPixelsinCallback(const bool enable);
 
+    /** [Eiger][Jungfrau] */
+    Result<bool> getFlipRows(Positions pos = {}) const;
+
+    /** [Eiger] flips rows paramater sent to slsreceiver to stream as json
+     * parameter to flip rows in gui \n[Jungfrau] flips rows in the detector
+     * itself.  For bottom module and number of interfaces must be set to 2.
+     * slsReceiver and slsDetectorGui does not handle.slsReceiver and
+     * slsDetectorGui does not handle
+     */
+    void setFlipRows(bool value, Positions pos = {});
+
     Result<bool> isVirtualDetectorServer(Positions pos = {}) const;
-    ///@{
+    ///@}
 
     /** @name Callbacks */
     ///@{
@@ -205,7 +223,7 @@ class Detector {
     void registerDataCallback(void (*func)(detectorData *, uint64_t, uint32_t,
                                            void *),
                               void *pArg);
-    ///@{
+    ///@}
 
     /** @name Acquisition Parameters */
     ///@{
@@ -286,16 +304,21 @@ class Detector {
     /** list of possible timing modes for this detector */
     std::vector<defs::timingMode> getTimingModeList() const;
 
-    /** [Eiger][Jungfrau] */
-    Result<defs::speedLevel> getSpeed(Positions pos = {}) const;
+    /** [Eiger][Jungfrau][Gotthard2] */
+    Result<defs::speedLevel> getReadoutSpeed(Positions pos = {}) const;
 
-    /** [Eiger][Jungfrau]
-     * Options: FULL_SPEED, HALF_SPEED, QUARTER_SPEED \n
-     * [Jungfrau] FULL_SPEED option only available from v2.0 boards and with
-     * setting number of interfaces to 2.  \n Also overwrites adcphase to
-     * recommended default.
+    /** [Eiger][Jungfrau][Gotthard2]
+     * [Jungfrau] Options: FULL_SPEED, HALF_SPEED (Default), QUARTER_SPEED \n
+     * [Eiger] Options: FULL_SPEED (Default), HALF_SPEED, QUARTER_SPEED \n
+     * [Gotthard2] Options: G2_108MHZ (Default), G2_144MHZ \n
+     * [Jungfrau] FULL_SPEED option only available from v2.0 boards and is
+     * recommended to set number of interfaces to 2. \n Also overwrites adcphase
+     * to recommended default.
      */
-    void setSpeed(defs::speedLevel value, Positions pos = {});
+    void setReadoutSpeed(defs::speedLevel value, Positions pos = {});
+
+    /** list of possible readoutspeed modes for this detector */
+    std::vector<defs::speedLevel> getReadoutSpeedList() const;
 
     /** [Jungfrau][CTB][Moench] */
     Result<int> getADCPhase(Positions pos = {}) const;
@@ -383,8 +406,9 @@ class Detector {
      * [Moench] Default is disabled. \n
      * [Jungfrau] Default is disabled. Get will return power status. Can be off
      * if temperature event occured (temperature over temp_threshold with
-     * temp_control enabled. \n [Mythen3][Gotthard2] Default is 1. If module not
-     * connected or wrong module, powerchip will fail.
+     * temp_control enabled. Will configure chip (only chip v1.1)\n
+     * [Mythen3][Gotthard2] Default is 1. If module not connected or wrong
+     * module, powerchip will fail.
      */
     void setPowerChip(bool on, Positions pos = {});
 
@@ -414,7 +438,24 @@ class Detector {
     std::vector<defs::dacIndex> getDacList() const;
 
     /** [Eiger][Jungfrau][Moench][Gotthard][Gotthard2][Mythen3] */
-    void setDefaultDacs(Positions pos = {});
+    Result<int> getDefaultDac(defs::dacIndex index, Positions pos = {});
+
+    /** [Eiger][Jungfrau][Moench][Gotthard][Gotthard2][Mythen3] */
+    void setDefaultDac(defs::dacIndex index, int defaultValue,
+                       Positions pos = {});
+
+    /** [Jungfrau][Mythen3] */
+    Result<int> getDefaultDac(defs::dacIndex index, defs::detectorSettings sett,
+                              Positions pos = {});
+
+    /** [Jungfrau][Mythen3] */
+    void setDefaultDac(defs::dacIndex index, int defaultValue,
+                       defs::detectorSettings sett, Positions pos = {});
+
+    /** [Eiger][Jungfrau][Moench][Gotthard][Gotthard2][Mythen3]
+    reset to defaults, hardReset will reset to hardcoded defaults on on-board
+    server */
+    void resetToDefaultDacs(const bool hardReset, Positions pos = {});
 
     Result<int> getDAC(defs::dacIndex index, bool mV = false,
                        Positions pos = {}) const;
@@ -452,7 +493,41 @@ class Detector {
      * [Mythen3] If exposure time is too short, acquisition will return with an
      * ERROR and take fewer frames than expected */
     void setParallelMode(bool value, Positions pos = {});
-    ///@{
+
+    /** [Gotthard2][Jungfrau] */
+    Result<int> getFilterResistor(Positions pos = {}) const;
+
+    /** [Gotthard2][Jungfrau] Set filter resistor. Increasing values for
+     * increasing resistance.\n[Gotthard2] Options: [0|1|2|3]. Default is
+     * 0.\n[Jungfrau] Options: [0|1]. Default is 1.*/
+    void setFilterResistor(int value, Positions pos = {});
+
+    /** [Gotthard2][Jungfrau] */
+    Result<defs::currentSrcParameters>
+    getCurrentSource(Positions pos = {}) const;
+
+    /** [Gotthard2][Jungfrau] Please refer documentation on currentSrcParameters
+     * (sls_detector_defs.h) on the structure and its members */
+    void setCurrentSource(defs::currentSrcParameters par, Positions pos = {});
+
+    /** [CTB][Gotthard2] */
+    Result<int> getDBITPipeline(Positions pos = {}) const;
+
+    /** [CTB] Options: 0-255 \n [Gotthard2] Options: 0-7 */
+    void setDBITPipeline(int value, Positions pos = {});
+
+    /** [Eiger][Jungfrau] */
+    Result<int> getReadNRows(Positions pos = {}) const;
+
+    /** [Eiger] Number of rows to read out per half module
+     * Options: 0 - 256. 256 is default. The permissible values depend on
+     * dynamic range and 10Gbe enabled. \n[Jungfrau] Number of rows per module
+     * starting from the centre. Options: 8 - 512, must be multiples of 8.
+     * Default is 512.
+     */
+    void setReadNRows(const int lines, Positions pos = {});
+
+    ///@}
 
     /** @name Acquisition */
     ///@{
@@ -488,17 +563,19 @@ class Detector {
     void stopReceiver();
 
     /** Non blocking: start detector acquisition. Status changes to RUNNING or
-     * WAITING and automatically returns to idle at the end of acquisition. */
+     * WAITING and automatically returns to idle at the end of acquisition.
+     [Mythen3] Master starts acquisition first */
     void startDetector();
 
     /** [Mythen3] Non blocking: start detector readout of counters in chip.
      * Status changes to TRANSMITTING and automatically returns to idle at the
-     * end of readout. */
+     * end of readout.
+     [Eiger] Master stops acquisition last */
     void startDetectorReadout();
 
     /** Non blocking: Abort detector acquisition. Status changes to IDLE or
      * STOPPED. Goes to stop server. */
-    void stopDetector();
+    void stopDetector(Positions pos = {});
 
     /** IDLE, ERROR, WAITING, RUN_FINISHED, TRANSMITTING, RUNNING, STOPPED \n
      * Goes to stop server */
@@ -520,8 +597,10 @@ class Detector {
      * numbers for different modules.*/
     void setNextFrameNumber(uint64_t value, Positions pos = {});
 
-    /** [Eiger][Mythen3] Sends an internal software trigger to the detector */
-    void sendSoftwareTrigger(Positions pos = {});
+    /** [Eiger][Mythen3] Sends an internal software trigger to the detector
+     * block true if command blocks till frames are sent out from that trigger
+     */
+    void sendSoftwareTrigger(const bool block = false, Positions pos = {});
 
     Result<defs::scanParameters> getScan(Positions pos = {}) const;
 
@@ -535,7 +614,7 @@ class Detector {
     /** Gets Scan error message if scan ended in error for non blocking
      * acquisitions.*/
     Result<std::string> getScanErrorMessage(Positions pos = {}) const;
-    ///@{
+    ///@}
 
     /** @name Network Configuration (Detector<->Receiver) */
     ///@{
@@ -595,6 +674,22 @@ class Detector {
 
     /** [Jungfrau] bottom half [Gotthard2] veto debugging */
     void setSourceUDPMAC2(const MacAddr mac, Positions pos = {});
+
+    Result<UdpDestination> getDestinationUDPList(const uint32_t entry,
+                                                 Positions pos = {}) const;
+
+    void setDestinationUDPList(const UdpDestination, const int module_id);
+
+    /** [Jungfrau][Eiger] */
+    Result<int> getNumberofUDPDestinations(Positions pos = {}) const;
+
+    void clearUDPDestinations(Positions pos = {});
+
+    /** [Jungfrau] */
+    Result<int> getFirstUDPDestination(Positions pos = {}) const;
+
+    /**[Jungfrau] Options 0-31 (or number of udp destinations) */
+    void setFirstUDPDestination(const int value, Positions pos = {});
 
     Result<IpAddr> getDestinationUDPIP(Positions pos = {}) const;
 
@@ -695,7 +790,7 @@ class Detector {
      * port
      */
     void setTransmissionDelayRight(int value, Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name Receiver Configuration */
     ///@{
@@ -783,7 +878,7 @@ class Detector {
      * streamer yet or there is no second interface, it gives 0 in its place. */
     Result<std::array<pid_t, NUM_RX_THREAD_IDS>>
     getRxThreadIds(Positions pos = {}) const;
-    ///@{
+    ///@}
 
     /** @name File */
     ///@{
@@ -839,7 +934,7 @@ class Detector {
     /** Default depends on detector type. \n 0 will set frames per file in an
      * acquisition to unlimited */
     void setFramesPerFile(int n, Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name ZMQ Streaming Parameters (Receiver<->Client) */
     ///@{
@@ -947,7 +1042,7 @@ class Detector {
      */
     void setRxZmqHwm(const int limit);
 
-    ///@{
+    ///@}
 
     /** @name Eiger Specific */
     ///@{
@@ -975,12 +1070,6 @@ class Detector {
     /** [Eiger] Overflow in 32 bit mode. Default is disabled.*/
     void setOverFlowMode(bool value, Positions pos = {});
 
-    /** [Eiger] */
-    Result<bool> getBottom(Positions pos = {}) const;
-
-    /** [Eiger] for client call back (gui) purposes to flip bottom image */
-    void setBottom(bool value, Positions pos = {});
-
     /** [Eiger] deadtime in ns, 0 = disabled */
     Result<ns> getRateCorrection(Positions pos = {}) const;
 
@@ -992,15 +1081,6 @@ class Detector {
      * 0 disable correction, > 0 custom deadtime, cannot be -1
      */
     void setRateCorrection(ns dead_time, Positions pos = {});
-
-    /** [Eiger] */
-    Result<int> getPartialReadout(Positions pos = {}) const;
-
-    /** [Eiger] Number of lines to read out per half module
-     * Options: 0 - 256. 256 is default. The permissible values depend on
-     * dynamic range and 10Gbe enabled.
-     */
-    void setPartialReadout(const int lines, Positions pos = {});
 
     /** [Eiger] */
     Result<bool> getInterruptSubframe(Positions pos = {}) const;
@@ -1022,12 +1102,6 @@ class Detector {
     /** [Eiger] activated by default at hostname command. Deactivated does not
      * send data or communicated with FEB or BEB */
     void setActive(const bool active, Positions pos = {});
-
-    /** [Eiger] */
-    Result<bool> getRxPadDeactivatedMode(Positions pos = {}) const;
-
-    /** [Eiger] Pad deactivated modules in receiver. Enabled by default */
-    void setRxPadDeactivatedMode(bool pad, Positions pos = {});
 
     /** [Eiger] Advanced */
     Result<bool> getPartialReset(Positions pos = {}) const;
@@ -1056,7 +1130,18 @@ class Detector {
     /** [Eiger] Sets detector size to a quad. 0 (disabled) is default. (Specific
      * hardware required). */
     void setQuad(const bool enable);
-    ///@{
+
+    /** [Eiger] */
+    Result<bool> getDataStream(const defs::portPosition port,
+                               Positions pos = {}) const;
+
+    /** [Eiger] enable or disable data streaming from left or right of detector.
+     * Default: enabled
+     */
+    void setDataStream(const defs::portPosition port, const bool enable,
+                       Positions pos = {});
+
+    ///@}
 
     /** @name Jungfrau Specific */
     ///@{
@@ -1065,6 +1150,9 @@ class Detector {
      *    Jungfrau Specific                           *
      *                                                *
      * ************************************************/
+
+    /** [Jungfrau] */
+    Result<double> getChipVersion(Positions pos = {}) const;
 
     /** [Jungfrau] */
     Result<int> getThresholdTemperature(Positions pos = {}) const;
@@ -1093,24 +1181,32 @@ class Detector {
     void resetTemperatureEvent(Positions pos = {});
 
     /** [Jungfrau] */
-    Result<bool> getAutoCompDisable(Positions pos = {}) const;
+    Result<bool> getAutoComparatorDisable(Positions pos = {}) const;
 
     /** [Jungfrau] Advanced
      * //TODO naming
-     * By default, the on-chip gain switching is active during the entire
-     * exposure. This mode disables the on-chip gain switching comparator
-     * automatically after 93.75% of exposure time (only for longer than
-     * 100us).\n
-     * Default is false or this mode disabled(comparator enabled throughout).
-     * true enables mode. 0 disables mode.
+     * By default, the on-chip gain switching is active during the
+     * entire exposure. This mode disables the on-chip gain switching comparator
+     * automatically after 93.75% of exposure time (only for longer than 100us).
+     * The % is for chipv1.0. One can set the duration for chipv1.1 using
+     * setComparatorDisableTime\n Default is false or this mode
+     * disabled(comparator enabled throughout). true enables mode. 0 disables
+     * mode.
      */
-    void setAutoCompDisable(bool value, Positions pos = {});
+    void setAutoComparatorDisable(bool value, Positions pos = {});
+
+    /** [Jungfrau] */
+    Result<ns> getComparatorDisableTime(Positions pos = {}) const;
+
+    /** [Jungfrau] Time before end of exposure when comparator is disabled. It
+     * is only possible for chipv1.1.*/
+    void setComparatorDisableTime(ns t, Positions pos = {});
 
     /** [Jungfrau] Advanced TODO naming */
     Result<int> getNumberOfAdditionalStorageCells(Positions pos = {}) const;
 
     /** [Jungfrau] Advanced \n
-     * Options: 0 - 15. Default: 0. \n
+     * Only for chipv1.0. Options: 0 - 15. Default: 0. \n
      * The #images = #frames x #triggers x (#storagecells + 1) */
     void setNumberOfAdditionalStorageCells(int value);
 
@@ -1118,7 +1214,8 @@ class Detector {
     Result<int> getStorageCellStart(Positions pos = {}) const;
 
     /** [Jungfrau] Advanced. Sets the storage cell storing the first acquisition
-     * of the series. Options: 0-15. Default: 15.
+     * of the series. Options: 0-max. max is 15 (default) for chipv1.0 and 3
+     * (default) for chipv1.1.
      */
     void setStorageCellStart(int cell, Positions pos = {});
 
@@ -1126,10 +1223,31 @@ class Detector {
     Result<ns> getStorageCellDelay(Positions pos = {}) const;
 
     /** [Jungfrau] Advanced \n Additional time delay between 2 consecutive
-     * exposures in burst mode. \n Options: (0-1638375 ns (resolution of 25ns)
+     * exposures in burst mode. \n Options: (0-1638375 ns (resolution of 25ns)\n
+     * Only applicable for chipv1.0.
      */
     void setStorageCellDelay(ns value, Positions pos = {});
-    ///@{
+
+    /** list of possible gainmode  */
+    std::vector<defs::gainMode> getGainModeList() const;
+
+    /** [Jungfrau]*/
+    Result<defs::gainMode> getGainMode(Positions pos = {}) const;
+
+    /** [Jungfrau] Options: DYNAMIC, FORCE_SWITCH_G1, FORCE_SWITCH_G2,
+     * FIX_G1, FIX_G2, FIX_G0 \n\CAUTION: Do not use FIX_G0 without caution, you
+     * can damage the detector!!!\n
+     */
+    void setGainMode(const defs::gainMode mode, Positions pos = {});
+
+    /** [Jungfrau] Advanced */
+    Result<int> getNumberOfFilterCells(Positions pos = {}) const;
+
+    /** [Jungfrau] Advanced Options[0-12], only for chip v1.1
+     */
+    void setNumberOfFilterCells(int cell, Positions pos = {});
+
+    ///@}
 
     /** @name Gotthard Specific */
     ///@{
@@ -1156,7 +1274,7 @@ class Detector {
 
     /** [Gotthard] */
     Result<ns> getExptimeLeft(Positions pos = {}) const;
-    ///@{
+    ///@}
 
     /** @name Gotthard2 Specific */
     ///@{
@@ -1224,18 +1342,6 @@ class Detector {
     void setCDSGain(bool value, Positions pos = {});
 
     /** [Gotthard2] */
-    Result<int> getFilter(Positions pos = {}) const;
-
-    /** [Gotthard2] Set filter resister. Options: 0-3. Default: 0 */
-    void setFilter(int value, Positions pos = {});
-
-    /** [Gotthard2] */
-    Result<bool> getCurrentSource(Positions pos = {}) const;
-
-    /** default disabled */
-    void setCurrentSource(bool value, Positions pos = {});
-
-    /** [Gotthard2] */
     Result<defs::timingSourceType> getTimingSource(Positions pos = {}) const;
 
     /** [Gotthard2] Options: TIMING_INTERNAL (default), TIMING_EXTERNAL */
@@ -1244,8 +1350,32 @@ class Detector {
     /** [Gotthard2] */
     Result<bool> getVeto(Positions pos = {}) const;
 
-    /** [Gotthard2] Default disabled */
+    /** [Gotthard2] Veto data in chip, Default disabled */
     void setVeto(const bool enable, Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<defs::streamingInterface> getVetoStream(Positions pos = {}) const;
+
+    /** [Gotthard2] Options: NONE (Default), LOW_LATENCY_LINK, ETHERNET_10GB
+     * (debugging), ALL Enable or disable the 2 veto streaming interfaces
+     * available. Can concatenate more than one interface. \nLOW_LATENCY_LINK is
+     * the default interface to work with. \nETHERNET_10GB is for debugging and
+     * also enables second interface in receiver for listening to veto packets
+     * (writes a separate file if writing enabled). Also restarts client and
+     * receiver zmq sockets if zmq streaming enabled.*/
+    void setVetoStream(const defs::streamingInterface value,
+                       Positions pos = {});
+
+    /** [Gotthard2] */
+    Result<defs::vetoAlgorithm>
+    getVetoAlgorithm(const defs::streamingInterface value,
+                     Positions pos = {}) const;
+
+    /** [Gotthard2] Options(vetoAlgorithm): ALG_HITS (default), ALG_RAW.
+     * Options(streamingInterface): LOW_LATENCY_LINK, ETHERNET_10GB */
+    void setVetoAlgorithm(const defs::vetoAlgorithm alg,
+                          const defs::streamingInterface value,
+                          Positions pos = {});
 
     /** [Gotthard2] */
     Result<int> getADCConfiguration(const int chipIndex, const int adcIndex,
@@ -1261,7 +1391,7 @@ class Detector {
 
     /** [Gotthard2] */
     void setBadChannels(const std::string &fname, Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name Mythen3 Specific */
     ///@{
@@ -1273,7 +1403,9 @@ class Detector {
     /** [Mythen3] */
     Result<uint32_t> getCounterMask(Positions pos = {}) const;
 
-    /** [Mythen3] countermask bit set for each counter index enabled */
+    /** [Mythen3] countermask bit set for each counter index enabled. Enabling
+     * counters sets vth dacs to remembered values and disabling sets them to
+     * disabled values. Setting vth dacs explicitly overwrites them. */
     void setCounterMask(uint32_t countermask, Positions pos = {});
 
     Result<int> getNumberOfGates(Positions pos = {}) const;
@@ -1306,9 +1438,17 @@ class Detector {
      * (internal gating). Gate index: 0-2, -1 for all */
     Result<std::array<ns, 3>> getGateDelayForAllGates(Positions pos = {}) const;
 
+    /** [Eiger][Mythen3][Gotthard1] via stop server **/
     Result<bool> getMaster(Positions pos = {}) const;
 
-    ///@{
+    // TODO! check if we really want to expose this !!!!!
+    Result<int> getChipStatusRegister(Positions pos = {}) const;
+
+    void setGainCaps(int caps, Positions pos = {});
+
+    Result<int> getGainCaps(Positions pos = {});
+
+    ///@}
 
     /** @name CTB / Moench Specific */
     ///@{
@@ -1367,7 +1507,7 @@ class Detector {
     /** [CTB][Moench] If any of a consecutive 4 bits are enabled, the "
         "complete 4 bits are enabled */
     void setTenGigaADCEnableMask(uint32_t mask, Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name CTB Specific */
     ///@{
@@ -1395,12 +1535,6 @@ class Detector {
 
     /** [CTB] */
     void setDBITClock(int value_in_MHz, Positions pos = {});
-
-    /** [CTB] */
-    Result<int> getDBITPipeline(Positions pos = {}) const;
-
-    /** [CTB] */
-    void setDBITPipeline(int value, Positions pos = {});
 
     /**
      * [CTB] mV
@@ -1455,7 +1589,7 @@ class Detector {
 
     /** [CTB] Default is enabled. */
     void setLEDEnable(bool enable, Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name Pattern */
     ///@{
@@ -1542,7 +1676,7 @@ class Detector {
 
     /** [Mythen3] */
     void startPattern(Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name Moench specific */
     ///@{
@@ -1576,7 +1710,7 @@ class Detector {
     void setAdditionalJsonParameter(const std::string &key,
                                     const std::string &value,
                                     Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name Advanced */
     ///@{
@@ -1586,21 +1720,24 @@ class Detector {
      *                                                *
      * ************************************************/
 
-    /**  Advanced user Function!
-     * [Jungfrau][CTB][Moench] fname is a pof file, rebooting the controller is
-     * recommended \n [Mythen3][Gotthard2] fname is an rbf file, power cycling
-     * the detector is recommended
+    /**  [Jungfrau][Gotthard][CTB][Moench][Mythen3][Gotthard2]
+     * Advanced user Function!
+     * Program firmware from command line, after which detector controller is
+     * rebooted. [Jungfrau][CTB][Moench] fname is a pof file (full path) \n
+     * [Mythen3][Gotthard2] fname is an rbf file (full path)
      */
     void programFPGA(const std::string &fname, Positions pos = {});
 
     /** [Jungfrau][CTB][Moench]  Advanced user Function!  */
     void resetFPGA(Positions pos = {});
 
-    /** [Jungfrau][Gotthard][CTB][Moench][Mythen3][Gotthard2]
+    /** [Jungfrau][Eiger][Gotthard][CTB][Moench][Mythen3][Gotthard2]
      * Advanced user Function! \n
-     * Copy detector server fname from tftp folder of hostname to detector \n
-     * [Jungfrau][Gotthard][CTB][Moench] Also changes respawn server, which is
-     * effective after a reboot.
+     * Copy detector server fname from tftp folder of hostname to detector. Also
+     * creates a symbolic link to a shorter name (without vx.x.x). Then the
+     * detector controller reboots (except eiger) \n
+     * [Jungfrau][Gotthard][CTB][Moench] Also changes respawn server (to the
+     * link), which is effective after a reboot.
      */
     void copyDetectorServer(const std::string &fname,
                             const std::string &hostname, Positions pos = {});
@@ -1611,11 +1748,11 @@ class Detector {
 
     /**
      * Advanced user Function!\n [Jungfrau][Gotthard][CTB][Moench] Updates the
-     * firmware, detector server and then reboots detector controller blackfin.
-     * \n [Mythen3][Gotthard2] Will still have old server starting up as the new
-     * server is not respawned \n sname is name of detector server binary found
-     * on tftp folder of host pc \n hostname is name of pc to tftp from \n fname
-     * is programming file name
+     * firmware, detector server, make a soft link and then reboots detector
+     * controller. \n [Mythen3][Gotthard2] Will require a script to start up the
+     * shorter named server link at start up \n sname is name of detector
+     * server binary found on tftp folder of host pc \n hostname is name of pc
+     * to tftp from \n fname is programming file name with full path to it
      */
     void updateFirmwareAndServer(const std::string &sname,
                                  const std::string &hostname,
@@ -1670,7 +1807,7 @@ class Detector {
     /** [CTB][Moench][Jungfrau] Advanced user Function! \n
     [Jungfrau] Inversions on top of default mask */
     void setADCInvert(uint32_t value, Positions pos = {});
-    ///@{
+    ///@}
 
     /** @name Insignificant */
     ///@{
@@ -1722,11 +1859,12 @@ class Detector {
     std::string getUserDetails() const;
 
     Result<uint64_t> getRxCurrentFrameIndex(Positions pos = {}) const;
-    ///@{
+    ///@}
 
   private:
     std::vector<int> getPortNumbers(int start_port);
     void updateRxRateCorrections();
+    void setNumberofUDPInterfaces_(int n, Positions pos);
 };
 
 } // namespace sls

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-other
+// Copyright (C) 2021 Contributors to the SLS Detector Package
 #pragma once
 
 #include <cassert>
@@ -53,4 +55,8 @@ std::vector<std::string> split(const std::string &strToSplit, char delimeter);
 std::string RemoveUnit(std::string &str);
 
 bool is_int(const std::string &s);
+
+bool replace_first(std::string *s, const std::string &substr,
+                   const std::string &repl);
+
 } // namespace sls

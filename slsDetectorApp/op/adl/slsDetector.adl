@@ -1973,6 +1973,21 @@ composite {
 		height=250
 	}
 	"composite name"=""
+	"composite file"="slsDetectorMOENCH.adl"
+	"dynamic attribute" {
+		vis="calc"
+		calc="A=5"
+		chan="$(P)$(R)DetectorType_RBV"
+	}
+}
+composite {
+	object {
+		x=720
+		y=35
+		width=560
+		height=250
+	}
+	"composite name"=""
 	"composite file"="slsDetectorMYTHEN3.adl"
 	"dynamic attribute" {
 		vis="calc"

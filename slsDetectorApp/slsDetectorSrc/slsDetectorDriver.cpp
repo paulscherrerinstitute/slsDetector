@@ -32,6 +32,14 @@
 
 static const char *driverName = "slsDetectorDriver";
 
+static const char *jsonDetectorModes[] = {
+    "counting", "analog", "interpolating"
+};
+
+static const char *jsonFrameModes[] = {
+    "frame", "pedestal", "newPedestal"
+};
+
 #define SDDetectorTypeString    "SD_DETECTOR_TYPE"
 #define SDSettingString         "SD_SETTING"
 #define SDDelayTimeString       "SD_DELAY_TIME"
@@ -61,6 +69,8 @@ static const char *driverName = "slsDetectorDriver";
 #define SDCounter1ThresholdString      "SD_CNT1_THRESHOLD"
 #define SDCounter2ThresholdString      "SD_CNT2_THRESHOLD"
 #define SDCounter3ThresholdString      "SD_CNT3_THRESHOLD"
+#define SDJsonDetectorModeString       "SD_JSON_DETECTORMODE"
+#define SDJsonFrameModeString          "SD_JSON_FRAMEMODE"
 #define SDSetupFileString       "SD_SETUP_FILE"
 #define SDLoadSetupString       "SD_LOAD_SETUP"
 
@@ -126,6 +136,8 @@ public:
     int SDCounter1Threshold;
     int SDCounter2Threshold;
     int SDCounter3Threshold;
+    int SDJsonDetectorMode;
+    int SDJsonFrameMode;
     int SDSetupFile;
     int SDLoadSetup;
     #define LAST_SD_PARAM SDLoadSetup
@@ -659,7 +671,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         pDetector->setTimingMode(slsDetectorDefs::timingMode(value), positions);
         SetDetectorParam(SDTimingMode, Integer, pDetector->getTimingMode());
     } else if (function == SDTriggerSoftware) {
-        pDetector->sendSoftwareTrigger(positions);
+        pDetector->sendSoftwareTrigger(false, positions);
     } else if (function == SDLoadSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
         try {
@@ -694,6 +706,10 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == SDHighVoltage) {
         pDetector->setHighVoltage(value, positions);
         SetDetectorParam(SDHighVoltage, Integer, pDetector->getHighVoltage());
+    } else if (function == SDJsonDetectorMode) {
+        pDetector->setAdditionalJsonParameter("detectorMode", jsonDetectorModes[value], positions);
+    } else if (function == SDJsonFrameMode) {
+        pDetector->setAdditionalJsonParameter("frameMode", jsonFrameModes[value], positions);
     } else {
         /* If this is not a parameter we have handled call the base class */
         if (function < FIRST_SD_PARAM) status = ADDriver::writeInt32(pasynUser, value);
@@ -973,6 +989,8 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     createParam(SDCounter1ThresholdString, asynParamInt32, &SDCounter1Threshold);
     createParam(SDCounter2ThresholdString, asynParamInt32, &SDCounter2Threshold);
     createParam(SDCounter3ThresholdString, asynParamInt32, &SDCounter3Threshold);
+    createParam(SDJsonDetectorModeString,  asynParamInt32, &SDJsonDetectorMode);
+    createParam(SDJsonFrameModeString,     asynParamInt32, &SDJsonFrameMode);
     createParam(SDSetupFileString,      asynParamOctet,  &SDSetupFile);
     createParam(SDLoadSetupString,      asynParamInt32,  &SDLoadSetup);
 
