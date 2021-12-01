@@ -1018,12 +1018,15 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     status |= setStringParam (ADModel, sls::ToString(detectorType).c_str());
     SetDetectorParam(SDDetectorType,Integer,  pDetector->getDetectorType());
     status |= setStringParam (ADSDKVersion, pDetector->getPackageVersion().c_str());
+    try {
     auto serialNumbers = pDetector->getSerialNumber();
     for (size_t i=0; i<serialNumbers.size(); i++)
         status |= setStringParam(i, ADSerialNumber, std::to_string(serialNumbers[i]));
     auto firmwareVersions = pDetector->getFirmwareVersion();
     for (size_t i=0; i<firmwareVersions.size(); i++)
         status |= setStringParam(i, ADFirmwareVersion, std::to_string(firmwareVersions[i]));
+    } catch (...) {
+    }
 
     auto sensorSize = pDetector->getDetectorSize();
     status |= setIntegerParam(ADMaxSizeX, sensorSize.x);
