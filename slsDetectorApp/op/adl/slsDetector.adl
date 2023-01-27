@@ -1,13 +1,13 @@
 
 file {
-	name="/afs/psi.ch/group/8435/wang/epics_driver_modules/slsDetector/psiBuild/../slsDetectorApp/op/adl/slsDetector.adl"
+	name="/afs/psi.ch/group/8215/wang/epics_driver_modules/slsDetector/slsDetectorApp/op/adl/slsDetector.adl"
 	version=030115
 }
 display {
 	object {
 		x=4
 		y=231
-		width=1290
+		width=1284
 		height=810
 	}
 	clr=14
@@ -85,6 +85,18 @@ display {
 		3cb420,
 		289315,
 		1a7309,
+	}
+}
+rectangle {
+	object {
+		x=363
+		y=639
+		width=350
+		height=159
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
 	}
 }
 rectangle {
@@ -1747,18 +1759,6 @@ text {
 	textix="Receiver"
 	align="horiz. centered"
 }
-rectangle {
-	object {
-		x=363
-		y=639
-		width=350
-		height=159
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-}
 text {
 	object {
 		x=377
@@ -1954,7 +1954,7 @@ composite {
 	object {
 		x=720
 		y=35
-		width=561
+		width=560
 		height=250
 	}
 	"composite name"=""
