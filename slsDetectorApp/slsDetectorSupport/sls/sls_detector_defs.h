@@ -20,6 +20,7 @@
 // C++ includes
 #include "sls/sls_detector_exceptions.h"
 #include <algorithm>
+#include <array>
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -34,12 +35,13 @@
 #define MAX_RX_DBIT 64
 
 /** default ports */
-#define DEFAULT_PORTNO         1952
-#define DEFAULT_UDP_PORTNO     50001
-#define DEFAULT_ZMQ_CL_PORTNO  30001
-#define DEFAULT_ZMQ_RX_PORTNO  30001
-#define DEFAULT_UDP_SRC_PORTNO 32410
-#define DEFAULT_UDP_DST_PORTNO 50001
+#define DEFAULT_TCP_CNTRL_PORTNO 1952
+#define DEFAULT_TCP_STOP_PORTNO  1953
+#define DEFAULT_TCP_RX_PORTNO    1954
+#define DEFAULT_ZMQ_CL_PORTNO    30001
+#define DEFAULT_ZMQ_RX_PORTNO    30001
+#define DEFAULT_UDP_SRC_PORTNO   32410
+#define DEFAULT_UDP_DST_PORTNO   50001
 
 #define MAX_UDP_DESTINATION 32
 
@@ -48,9 +50,6 @@
 
 // ctb/ moench 1g udp (read from fifo)
 #define UDP_PACKET_DATA_BYTES (1344)
-
-/** maximum rois */
-#define MAX_ROIS 100
 
 /** maximum trim en */
 #define MAX_TRIMEN 100
@@ -65,15 +64,21 @@
 #define DEFAULT_DET_MAC2 "00:aa:bb:cc:dd:ff"
 #define DEFAULT_DET_IP2  "129.129.202.46"
 
+#define LOCALHOST_IP "127.0.0.1"
+
 /** default maximum string length */
 #define MAX_STR_LENGTH   1000
 #define SHORT_STR_LENGTH 20
 
-#define MAX_PATTERN_LENGTH 0x2000
+#define MAX_PATTERN_LENGTH    0x2000
+#define MAX_PATTERN_LEVELS    6
+#define M3_MAX_PATTERN_LEVELS 3
+
+#define MAX_NUM_COUNTERS 3
 
 #define DEFAULT_STREAMING_TIMER_IN_MS 500
 
-#define NUM_RX_THREAD_IDS 8
+#define NUM_RX_THREAD_IDS 9
 
 #ifdef __cplusplus
 class slsDetectorDefs {
@@ -108,19 +113,20 @@ class slsDetectorDefs {
 
     /**
         @short  structure for a Detector Packet or Image Header
+        Details at https://slsdetectorgroup.github.io/devdoc/udpheader.html
         @li frameNumber is the frame number
         @li expLength is the subframe number (32 bit eiger) or real time
        exposure time in 100ns (others)
         @li packetNumber is the packet number
-        @li bunchId is the bunch id from beamline
+        @li detSpec1 is detector specific field 1
         @li timestamp is the time stamp with 10 MHz clock
         @li modId is the unique module id (unique even for left, right, top,
        bottom)
         @li row is the row index in the complete detector system
         @li column is the column index in the complete detector system
-        @li reserved is reserved
-        @li debug is for debugging purposes
-        @li roundRNumber is the round robin set number
+        @li detSpec2 is detector specific field 2
+        @li detSpec3 is detector specific field 3
+        @li detSpec4 is detector specific field 4
         @li detType is the detector type see :: detectorType
         @li version is the version number of this structure format
     */
@@ -129,14 +135,14 @@ class slsDetectorDefs {
         uint64_t frameNumber;
         uint32_t expLength;
         uint32_t packetNumber;
-        uint64_t bunchId;
+        uint64_t detSpec1;
         uint64_t timestamp;
         uint16_t modId;
         uint16_t row;
         uint16_t column;
-        uint16_t reserved;
-        uint32_t debug;
-        uint16_t roundRNumber;
+        uint16_t detSpec2;
+        uint32_t detSpec3;
+        uint16_t detSpec4;
         uint8_t detType;
         uint8_t version;
     } sls_detector_header;
@@ -170,13 +176,38 @@ class slsDetectorDefs {
     struct ROI {
         int xmin{-1};
         int xmax{-1};
+        int ymin{-1};
+        int ymax{-1};
         ROI() = default;
         ROI(int xmin, int xmax) : xmin(xmin), xmax(xmax){};
+        ROI(int xmin, int xmax, int ymin, int ymax)
+            : xmin(xmin), xmax(xmax), ymin(ymin), ymax(ymax){};
+        constexpr std::array<int, 4> getIntArray() const {
+            return std::array<int, 4>({xmin, xmax, ymin, ymax});
+        }
+        constexpr bool completeRoi() const {
+            return (xmin == -1 && xmax == -1 && ymin == -1 && ymax == -1);
+        }
+        constexpr bool noRoi() const {
+            return (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0);
+        }
+        void setNoRoi() {
+            xmin = 0;
+            xmax = 0;
+            ymin = 0;
+            ymax = 0;
+        }
+        constexpr bool operator==(const ROI &other) const {
+            return ((xmin == other.xmin) && (xmax == other.xmax) &&
+                    (ymin == other.ymin) && (ymax == other.ymax));
+        }
     } __attribute__((packed));
 #else
 typedef struct {
     int xmin;
     int xmax;
+    int ymin;
+    int ymax;
 } ROI;
 #endif
 
@@ -436,6 +467,8 @@ enum streamingInterface {
         FIX_G0
     };
 
+    enum polarity { POSITIVE, NEGATIVE };
+
 #ifdef __cplusplus
 
     /** scan structure */
@@ -563,6 +596,8 @@ enum streamingInterface {
 
 #ifdef __cplusplus
 };
+
+// operators needed in ToString
 inline slsDetectorDefs::streamingInterface
 operator|(const slsDetectorDefs::streamingInterface &a,
           const slsDetectorDefs::streamingInterface &b) {
@@ -576,6 +611,7 @@ operator&(const slsDetectorDefs::streamingInterface &a,
     return slsDetectorDefs::streamingInterface(static_cast<int32_t>(a) &
                                                static_cast<int32_t>(b));
 };
+
 #endif
 
 #ifdef __cplusplus

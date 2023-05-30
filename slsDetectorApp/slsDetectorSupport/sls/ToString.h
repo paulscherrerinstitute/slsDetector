@@ -43,6 +43,7 @@ std::string ToString(const defs::portPosition s);
 std::string ToString(const defs::streamingInterface s);
 std::string ToString(const defs::vetoAlgorithm s);
 std::string ToString(const defs::gainMode s);
+std::string ToString(const defs::polarity s);
 
 std::string ToString(const slsDetectorDefs::xy &coord);
 std::ostream &operator<<(std::ostream &os, const slsDetectorDefs::xy &coord);
@@ -272,7 +273,7 @@ T StringTo(const std::string &t, const std::string &unit) {
     try {
         tval = std::stod(t);
     } catch (const std::invalid_argument &e) {
-        throw sls::RuntimeError("Could not convert string to time");
+        throw RuntimeError("Could not convert string to time");
     }
 
     using std::chrono::duration;
@@ -286,7 +287,7 @@ T StringTo(const std::string &t, const std::string &unit) {
     } else if (unit == "s" || unit.empty()) {
         return duration_cast<T>(std::chrono::duration<double>(tval));
     } else {
-        throw sls::RuntimeError(
+        throw RuntimeError(
             "Invalid unit in conversion from string to std::chrono::duration");
     }
 }
@@ -313,6 +314,7 @@ template <> defs::portPosition StringTo(const std::string &s);
 template <> defs::streamingInterface StringTo(const std::string &s);
 template <> defs::vetoAlgorithm StringTo(const std::string &s);
 template <> defs::gainMode StringTo(const std::string &s);
+template <> defs::polarity StringTo(const std::string &s);
 
 template <> uint32_t StringTo(const std::string &s);
 template <> uint64_t StringTo(const std::string &s);

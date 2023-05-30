@@ -4,7 +4,7 @@ EXCLUDE_VERSIONS=3.13 3.14
 BUILDCLASSES=Linux
 ARCH_FILTER=$(EPICS_HOST_ARCH)
 
-LIBVERSION=v6.1.1
+LIBVERSION=v7.0.1
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
@@ -17,9 +17,10 @@ USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
 USR_LIBS += SlsDetector SlsSupport
 
-SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so.6
-SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so.6
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so.7
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so.7
 
 TEMPLATES += ../slsDetectorApp/Db/slsDetector.template
 TEMPLATES += ../slsDetectorApp/Db/slsDetector_settings.req
 
+QT += ../slsDetectorApp/op/ui/*.ui

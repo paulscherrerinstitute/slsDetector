@@ -101,7 +101,7 @@ public:
 
     virtual void report(FILE *fp, int details);
 
-    void dataCallback(detectorData *pData); /* These should be private but are called from C so must be public */
+    void dataCallback(sls::detectorData *pData); /* These should be private but are called from C so must be public */
     void acquisitionTask();
     void shutdown();
 
@@ -171,7 +171,7 @@ static void c_shutdown(void* arg) {
     p->shutdown();
 }
 
-void dataCallbackC(detectorData *pData, uint64_t n, uint32_t s, void *pArg)
+void dataCallbackC(sls::detectorData *pData, uint64_t n, uint32_t s, void *pArg)
 {
     if (pData == NULL)
        return;
@@ -223,7 +223,7 @@ void slsDetectorDriver::acquisitionTask()
         }
 
         /* Poll detector temperature if exist */
-        if (tempDacIndex != -1) {
+        if (0) {
             try {
             SetDetectorParam(ADTemperatureActual, Double, pDetector->getTemperature(slsDetectorDefs::dacIndex(tempDacIndex)));
             callParamCallbacks();
@@ -297,7 +297,7 @@ void slsDetectorDriver::acquisitionTask()
     }
 }
 
-void slsDetectorDriver::dataCallback(detectorData *pData)
+void slsDetectorDriver::dataCallback(sls::detectorData *pData)
 {
     NDArray *pImage;
     int ndims = 2;
