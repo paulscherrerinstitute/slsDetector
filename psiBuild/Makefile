@@ -4,7 +4,7 @@ EXCLUDE_VERSIONS=3.13 3.14
 BUILDCLASSES=Linux
 ARCH_FILTER=$(EPICS_HOST_ARCH)
 
-LIBVERSION=v7.0.2
+LIBVERSION=v7.0.1
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
