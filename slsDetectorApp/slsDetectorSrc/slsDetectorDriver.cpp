@@ -103,6 +103,7 @@ public:
 
     void dataCallback(sls::detectorData *pData); /* These should be private but are called from C so must be public */
     void acquisitionTask();
+    void triggerSoftwareTask();
     void shutdown();
 
  protected:
@@ -149,7 +150,7 @@ public:
 
     /* Our data */
     sls::Detector *pDetector;
-    epicsEventId startEventId;
+    epicsEventId startEventId, triggerSoftwareEventId;
     int tempDacIndex;
 };
 
@@ -186,6 +187,12 @@ void acquisitionTaskC(void *drvPvt)
 {
     slsDetectorDriver *pDetectorDriver = (slsDetectorDriver*)drvPvt;
     pDetectorDriver->acquisitionTask();
+}
+
+void triggerSoftwareTaskC(void *drvPvt)
+{
+    slsDetectorDriver *pDetectorDriver = (slsDetectorDriver*)drvPvt;
+    pDetectorDriver->triggerSoftwareTask();
 }
 
 void slsDetectorDriver::shutdown()
@@ -294,6 +301,26 @@ void slsDetectorDriver::acquisitionTask()
             setIntegerParam(ADAcquire,  0);
             callParamCallbacks();
         }
+    }
+}
+
+void slsDetectorDriver::triggerSoftwareTask()
+{
+    const char *functionName = "dataCallback";
+
+    while (1) {
+        epicsEventWait(this->triggerSoftwareEventId);
+        try {
+            pDetector->sendSoftwareTrigger(true);
+        } catch (const std::exception &e) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                "%s:%s: error: %s\n",
+                driverName, functionName, e.what());
+        }
+        this->lock();
+        setIntegerParam(SDTriggerSoftware, 0);
+        callParamCallbacks();
+        this->unlock();
     }
 }
 
@@ -671,7 +698,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         pDetector->setTimingMode(slsDetectorDefs::timingMode(value), positions);
         SetDetectorParam(SDTimingMode, Integer, pDetector->getTimingMode());
     } else if (function == SDTriggerSoftware) {
-        pDetector->sendSoftwareTrigger(false, positions);
+        epicsEventSignal(this->triggerSoftwareEventId);
     } else if (function == SDLoadSetup) {
         getStringParam(SDSetupFile, sizeof(filePath), filePath);
         try {
@@ -960,6 +987,14 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
         return;
     }
 
+    /* Create the epicsEvent for signaling to the software trigger task */
+    this->triggerSoftwareEventId = epicsEventCreate(epicsEventEmpty);
+    if (!this->triggerSoftwareEventId) {
+        printf("%s:%s epicsEventCreate failure for software trigger event\n",
+            driverName, functionName);
+        return;
+    }
+
     createParam(SDDetectorTypeString,   asynParamInt32,  &SDDetectorType);
     createParam(SDSettingString,        asynParamInt32,  &SDSetting);
     createParam(SDDelayTimeString,      asynParamFloat64,&SDDelayTime);
@@ -1109,6 +1144,13 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
                                 epicsThreadPriorityMedium,
                                 epicsThreadGetStackSize(epicsThreadStackMedium),
                                 (EPICSTHREADFUNC)acquisitionTaskC,
+                                this) == NULL);
+
+    /* Create the thread that sends software triggers */
+    status = (epicsThreadCreate("triggerSoftwareTask",
+                                epicsThreadPriorityMedium,
+                                epicsThreadGetStackSize(epicsThreadStackMedium),
+                                (EPICSTHREADFUNC)triggerSoftwareTaskC,
                                 this) == NULL);
 }
 

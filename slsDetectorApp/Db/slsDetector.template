@@ -311,7 +311,7 @@ record (mbbi, "$(P)$(R)TimingMode_RBV")
 #----------------------------------
 # Software trigger (EIGER)
 #----------------------------------
-record(bo, "$(P)$(R)TriggerSoftware")
+record(busy, "$(P)$(R)TriggerSoftware")
 {
     field (DTYP, "asynInt32")
     field (OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT)) SD_TRIGGER_SOFTWARE")
