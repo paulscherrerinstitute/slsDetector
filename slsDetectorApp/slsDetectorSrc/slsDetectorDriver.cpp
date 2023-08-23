@@ -96,6 +96,7 @@ public:
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
     virtual asynStatus writeOctet(asynUser *pasynUser, const char *value,
                                     size_t nChars, size_t *nActual);
+    virtual asynStatus readFloat64(asynUser *pasynUser, epicsFloat64 *value);
     virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
                                size_t nElements, size_t *nIn);
 
@@ -152,6 +153,7 @@ public:
     sls::Detector *pDetector;
     epicsEventId startEventId, triggerSoftwareEventId;
     int tempDacIndex;
+    bool hasReceiver;
 };
 
 #define NUM_SD_PARAMS (&LAST_SD_PARAM - &FIRST_SD_PARAM + 1)
@@ -229,18 +231,6 @@ void slsDetectorDriver::acquisitionTask()
             getIntegerParam(ADAcquire, &acquire);
         }
 
-        /* Poll detector temperature if exist */
-        if (0) {
-            try {
-            SetDetectorParam(ADTemperatureActual, Double, pDetector->getTemperature(slsDetectorDefs::dacIndex(tempDacIndex)));
-            callParamCallbacks();
-            } catch (const std::exception &e) {
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: Detector::getTemperature: %s\n",
-                driverName, functionName, e.what());
-            }
-        }
-
         setShutter(1);
         setIntegerParam(ADStatus, slsDetectorDefs::RUNNING);
         setIntegerParam(SDRecvMissed, 0);
@@ -269,16 +259,18 @@ void slsDetectorDriver::acquisitionTask()
         /* Update detector status */
         try {
         auto detStatus = pDetector->getDetectorStatus();
-        auto recvStatus = pDetector->getReceiverStatus();
-        auto fileNumber = pDetector->getAcquisitionIndex();
         SetDetectorParam(ADStatus, Integer, detStatus);
-        SetDetectorParam(SDRecvStatus, Integer, recvStatus);
-        SetDetectorParam(NDFileNumber, Integer, fileNumber);
-        // missed packets for each module (summed up for all UDP ports)
-        int missedPackets = 0;
-        for (auto m: pDetector->getNumMissingPackets())
-            missedPackets += sls::sum(m);
-        setIntegerParam(SDRecvMissed, missedPackets);
+        if (hasReceiver) {
+            auto recvStatus = pDetector->getReceiverStatus();
+            auto fileNumber = pDetector->getAcquisitionIndex();
+            SetDetectorParam(SDRecvStatus, Integer, recvStatus);
+            SetDetectorParam(NDFileNumber, Integer, fileNumber);
+            // missed packets for each module (summed up for all UDP ports)
+            int missedPackets = 0;
+            for (auto m: pDetector->getNumMissingPackets())
+                missedPackets += sls::sum(m);
+            setIntegerParam(SDRecvMissed, missedPackets);
+        }
         } catch (const std::exception &e) {
         status = asynError;
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
@@ -716,20 +708,24 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
             epicsEventSignal(this->startEventId);
         } else {
             pDetector->stopDetector();
-            pDetector->stopReceiver();
+            if (hasReceiver) pDetector->stopReceiver();
             pDetector->clearAcquiringFlag();
             SetDetectorParam(ADStatus, Integer, pDetector->getDetectorStatus());
-            SetDetectorParam(SDRecvStatus, Integer, pDetector->getReceiverStatus());
+            if (hasReceiver) SetDetectorParam(SDRecvStatus, Integer, pDetector->getReceiverStatus());
         }
     } else if (function ==  NDAutoSave) {
         pDetector->setFileWrite(value, positions);
         SetDetectorParam(NDAutoSave, Integer, pDetector->getFileWrite());
     } else if (function == SDRecvMode) {
-        pDetector->setRxZmqFrequency(value, positions);
-        SetDetectorParam(SDRecvMode, Integer, pDetector->getRxZmqFrequency());
+        if (hasReceiver) {
+            pDetector->setRxZmqFrequency(value, positions);
+            SetDetectorParam(SDRecvMode, Integer, pDetector->getRxZmqFrequency());
+        }
     } else if (function == SDRecvStream) {
-        pDetector->setRxZmqDataStream(value, positions);
-        SetDetectorParam(SDRecvStream, Integer, pDetector->getRxZmqDataStream());
+        if (hasReceiver) {
+            pDetector->setRxZmqDataStream(value, positions);
+            SetDetectorParam(SDRecvStream, Integer, pDetector->getRxZmqDataStream());
+        }
     } else if (function == SDHighVoltage) {
         pDetector->setHighVoltage(value, positions);
         SetDetectorParam(SDHighVoltage, Integer, pDetector->getHighVoltage());
@@ -764,6 +760,41 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
               "%s:%s: function=%d, value=%d\n",
               driverName, functionName, function, value);
     return((asynStatus)status);
+}
+
+/** Called when asyn clients call pasynFloat64->read().
+ * This function performs actions for ADTemperatureActual.
+ * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+ * \param[in] value Value to write. */
+asynStatus slsDetectorDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
+{
+    int function = pasynUser->reason;
+    int addr = 0;
+    asynStatus status = asynSuccess;
+    static const char *functionName = "readFloat64";
+
+    status = getAddress(pasynUser, &addr);
+    if (status != asynSuccess) return((asynStatus)status);
+
+    if (function == ADTemperatureActual) {
+        epicsInt32 detectorType;
+        getIntegerParam(SDDetectorType, &detectorType);
+        /* Poll detector temperature if exist. It was shown ~10 seconds overhead
+           on a MYTHEN3 multi-detector system. */
+        if (tempDacIndex != -1 && detectorType != slsDetectorDefs::MYTHEN3) {
+            try {
+                *value = pDetector->getTemperature(slsDetectorDefs::dacIndex(tempDacIndex))[addr];
+                callParamCallbacks();
+            } catch (const std::exception &e) {
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: Detector::getTemperature: %s\n",
+                    driverName, functionName, e.what());
+            }
+        }
+    } else {
+        status =  ADDriver::readFloat64(pasynUser, value);
+    }
+    return status;
 }
 
 /** Called when asyn clients call pasynFloat64->write().
@@ -1062,6 +1093,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
         status |= setStringParam(i, ADFirmwareVersion, std::to_string(firmwareVersions[i]));
     } catch (...) {
     }
+    hasReceiver = pDetector->getUseReceiverFlag().squash();
 
     auto sensorSize = pDetector->getDetectorSize();
     status |= setIntegerParam(ADMaxSizeX, sensorSize.x);
@@ -1096,7 +1128,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
     SetDetectorParam(SDHighVoltage, Integer, pDetector->getHighVoltage());
 
     status |= setIntegerParam(ADStatus, pDetector->getDetectorStatus().squash(slsDetectorDefs::ERROR));
-    SetDetectorParam(SDRecvStatus, Integer, pDetector->getReceiverStatus());
+    if (hasReceiver) SetDetectorParam(SDRecvStatus, Integer, pDetector->getReceiverStatus());
 
     /* Most detectors support Settings. But don't fail if one doesn't  */
     try { SetDetectorParam(SDSetting, Integer, pDetector->getSettings()); } catch (...) {}
