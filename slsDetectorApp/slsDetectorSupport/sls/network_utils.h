@@ -2,6 +2,7 @@
 // Copyright (C) 2021 Contributors to the SLS Detector Package
 #pragma once
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -63,8 +64,8 @@ class MacAddr {
 
 struct UdpDestination {
     uint32_t entry{};
-    uint32_t port{};
-    uint32_t port2{};
+    uint16_t port{};
+    uint16_t port2{};
     IpAddr ip;
     IpAddr ip2;
     MacAddr mac;
@@ -87,5 +88,6 @@ IpAddr HostnameToIp(const char *hostname);
 std::string IpToInterfaceName(const std::string &ip);
 MacAddr InterfaceNameToMac(const std::string &inf);
 IpAddr InterfaceNameToIp(const std::string &ifn);
-
+void validatePortNumber(uint16_t port);
+void validatePortRange(uint16_t startPort, int numPorts);
 } // namespace sls

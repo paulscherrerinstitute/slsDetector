@@ -18,9 +18,11 @@ INC += sls/sls_detector_exceptions.h
 INC += sls/string_utils.h
 
 # These libraries are built from slsDetectorSoftware
-ifeq (RHEL7-x86_64, $(findstring RHEL7-x86_64, $(T_A)))
-LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsSupport.so.6
-LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsDetector.so.6
+ifeq ($(ARCH_CLASS), x86_64)
+LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsSupport.so
+LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsSupport.so.8
+LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsDetector.so
+LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsDetector.so.8
 endif
 
 #=============================

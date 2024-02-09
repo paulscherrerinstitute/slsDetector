@@ -30,7 +30,8 @@
 // C includes
 #include <stdint.h>
 #endif
-
+// Need macros for C compatibility
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
 #define BIT32_MASK  0xFFFFFFFF
 #define MAX_RX_DBIT 64
 
@@ -46,9 +47,9 @@
 #define MAX_UDP_DESTINATION 32
 
 #define SLS_DETECTOR_HEADER_VERSION      0x2
-#define SLS_DETECTOR_JSON_HEADER_VERSION 0x4
+#define SLS_DETECTOR_JSON_HEADER_VERSION 0x5
 
-// ctb/ moench 1g udp (read from fifo)
+// ctb 1g udp (read from fifo)
 #define UDP_PACKET_DATA_BYTES (1344)
 
 /** maximum trim en */
@@ -79,7 +80,7 @@
 #define DEFAULT_STREAMING_TIMER_IN_MS 500
 
 #define NUM_RX_THREAD_IDS 9
-
+// NOLINTEND(cppcoreguidelines-macro-usage)
 #ifdef __cplusplus
 class slsDetectorDefs {
   public:
@@ -404,9 +405,15 @@ typedef struct {
     enum clockIndex { ADC_CLOCK, DBIT_CLOCK, RUN_CLOCK, SYNC_CLOCK };
 
     /**
-     * read out mode (ctb, moench)
+     * read out mode (ctb)
      */
-    enum readoutMode { ANALOG_ONLY, DIGITAL_ONLY, ANALOG_AND_DIGITAL };
+    enum readoutMode {
+        ANALOG_ONLY,
+        DIGITAL_ONLY,
+        ANALOG_AND_DIGITAL,
+        TRANSCEIVER_ONLY,
+        DIGITAL_AND_TRANSCEIVER
+    };
 
     /** chip speed */
     enum speedLevel {
@@ -444,6 +451,11 @@ typedef struct {
     };
 
     enum portPosition { LEFT, RIGHT, TOP, BOTTOM };
+
+    /**
+     * eiger fpga position
+     */
+    enum fpgaPosition { FRONT_LEFT, FRONT_RIGHT };
 
 #ifdef __cplusplus
     enum class streamingInterface {
@@ -535,6 +547,29 @@ enum streamingInterface {
         }
     } __attribute__((packed));
 
+    struct pedestalParameters {
+        int enable;
+        uint8_t frames;
+        uint16_t loops;
+
+        /** [Jungfrau] disable */
+        pedestalParameters() : enable(0), frames(0), loops(0) {}
+
+        /** [Jungfrau] enable */
+        pedestalParameters(uint8_t pedestalFrames, uint16_t pedestalLoops)
+            : enable(1), frames(pedestalFrames), loops(pedestalLoops) {
+            if (frames == 0 || loops == 0) {
+                throw sls::RuntimeError(
+                    "Pedestal frames or loops cannot be 0.");
+            }
+        }
+
+        bool operator==(const pedestalParameters &other) const {
+            return ((enable == other.enable) && (frames == other.frames) &&
+                    (loops == other.loops));
+        }
+    } __attribute__((packed));
+
     /**
      * structure to udpate receiver
      */
@@ -544,10 +579,10 @@ enum streamingInterface {
         int moduleIndex{0};
         char hostname[MAX_STR_LENGTH];
         int udpInterfaces{1};
-        int udp_dstport{0};
+        uint16_t udp_dstport{0};
         uint32_t udp_dstip{0U};
         uint64_t udp_dstmac{0LU};
-        int udp_dstport2{0};
+        uint16_t udp_dstport2{0};
         uint32_t udp_dstip2{0U};
         uint64_t udp_dstmac2{0LU};
         int64_t frames{0};
@@ -583,6 +618,8 @@ enum streamingInterface {
         int64_t gateDelay3Ns{0};
         int gates{0};
         scanParameters scanParams{};
+        int transceiverSamples{0};
+        uint32_t transceiverMask{0};
     } __attribute__((packed));
 #endif
 
@@ -632,6 +669,13 @@ struct detParameters {
             nChipY = 1;
             nDacs = 8;
             break;
+        case slsDetectorDefs::detectorType::MOENCH:
+            nChanX = 400;
+            nChanY = 400;
+            nChipX = 1;
+            nChipY = 1;
+            nDacs = 8;
+            break;
         case slsDetectorDefs::detectorType::JUNGFRAU:
             nChanX = 256;
             nChanY = 256;
@@ -645,13 +689,6 @@ struct detParameters {
             nChipX = 1;
             nChipY = 1;
             nDacs = 24;
-            break;
-        case slsDetectorDefs::detectorType::MOENCH:
-            nChanX = 32;
-            nChanY = 1;
-            nChipX = 1;
-            nChipY = 1;
-            nDacs = 8;
             break;
         case slsDetectorDefs::detectorType::EIGER:
             nChanX = 256;
