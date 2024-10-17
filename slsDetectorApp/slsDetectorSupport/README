@@ -1,1 +1,13 @@
-This is the slsDetector library compiled from tag 5.1.0
+This is the slsDetector library compiled from tag 8.0.2 on a RHEL8 Linux PC.
+If it is not compatible with your system, or you need a newer version of the library,
+follow the steps to build your own.
+
+```
+$ git clone --branch 8.0.2 --depth 1 https://github.com/slsdetectorgroup/slsDetectorPackage.git
+$ cd slsDetectorPackage
+$ cmake -B build
+$ cmake --build build
+$ cmake  --install build --prefix build/tmp
+```
+
+The header files are then copied from *build/tmp/include/sls/* and library files from *build/tmp/lib64/*.

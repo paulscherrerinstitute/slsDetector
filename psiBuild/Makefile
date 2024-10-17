@@ -2,9 +2,9 @@ include /ioc/tools/driver.makefile
 PROJECT=slsDetector
 EXCLUDE_VERSIONS=3.13 3.14
 BUILDCLASSES=Linux
-ARCH_FILTER=$(EPICS_HOST_ARCH)
+ARCH_FILTER=%-x86_64
 
-LIBVERSION=v8.0.1
+LIBVERSION=v8.0.2
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd

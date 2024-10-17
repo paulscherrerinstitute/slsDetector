@@ -96,6 +96,9 @@ Configuration
 
 Release Notes
 -------------
+* 8.0.2 - 17.10.2024
+  1. slsDetector library updated to 8.0.2 built on RHEL8.
+
 * 5.0.0 - 30.11.2020
   1. slsDetector library updated to 5.0.1
 
