@@ -4,7 +4,7 @@ EXCLUDE_VERSIONS=3.13 3.14
 BUILDCLASSES=Linux
 ARCH_FILTER=%-x86_64
 
-LIBVERSION=v8.0.2
+LIBVERSION=v9.0.0
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
@@ -17,8 +17,8 @@ USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
 USR_LIBS += SlsDetector SlsSupport
 
-SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so.8
-SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so.8
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so.9
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so.9
 
 TEMPLATES += ../slsDetectorApp/Db/slsDetector.template
 TEMPLATES += ../slsDetectorApp/Db/slsDetector_settings.req
