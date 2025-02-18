@@ -148,6 +148,7 @@ public:
     /* These are the methods that are new to this class */
     std::chrono::nanoseconds secToNsec(double seconds);
     double nsecToSec(std::chrono::nanoseconds nanoseconds);
+    void getHighVoltage();
 
     /* Our data */
     sls::Detector *pDetector;
@@ -167,6 +168,20 @@ std::chrono::nanoseconds slsDetectorDriver::secToNsec(double seconds)
 double slsDetectorDriver::nsecToSec(std::chrono::nanoseconds nanoseconds)
 {
     return std::chrono::duration<double>(nanoseconds).count();
+}
+
+void slsDetectorDriver::getHighVoltage()
+{
+    /* Only the main module has a valid high voltage setting */
+    auto hv = pDetector->getHighVoltage();
+    for (int value: hv) {
+        if (value >= 0) {
+            for (size_t addr=0; addr<hv.size(); addr++) {
+                setIntegerParam(addr, SDHighVoltage, value);
+            }
+            break;
+        }
+    }
 }
 
 static void c_shutdown(void* arg) {
@@ -728,7 +743,7 @@ asynStatus slsDetectorDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         }
     } else if (function == SDHighVoltage) {
         pDetector->setHighVoltage(value, positions);
-        SetDetectorParam(SDHighVoltage, Integer, pDetector->getHighVoltage());
+        getHighVoltage();
     } else if (function == SDJsonDetectorMode) {
         pDetector->setAdditionalJsonParameter("detectorMode", jsonDetectorModes[value], positions);
     } else if (function == SDJsonFrameMode) {
@@ -1125,7 +1140,7 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
 
     if (tempDacIndex != -1)
         SetDetectorParam(ADTemperatureActual, Double, pDetector->getTemperature(slsDetectorDefs::dacIndex(tempDacIndex)));
-    SetDetectorParam(SDHighVoltage, Integer, pDetector->getHighVoltage());
+    getHighVoltage();
 
     status |= setIntegerParam(ADStatus, pDetector->getDetectorStatus().squash(slsDetectorDefs::ERROR));
     if (hasReceiver) SetDetectorParam(SDRecvStatus, Integer, pDetector->getReceiverStatus());
