@@ -1081,6 +1081,13 @@ slsDetectorDriver::slsDetectorDriver(const char *portName, const char *configFil
         pDetector->loadConfig(configFileName);
     }
     catch (const std::exception &e) {
+#if ADCORE_VERSION > 3 || (ADCORE_VERSION == 3 && ADCORE_REVISION >= 10)
+        this->deviceIsReachable = false;
+        this->disconnect(pasynUserSelf);
+        setIntegerParam(ADAcquire, 0);
+        setIntegerParam(ADStatus, ADStatusDisconnected);
+        setStringParam(ADStatusMessage, "Detector disconnected");
+#endif
         status = asynError;
         printf("%s:%s: Detector::loadConfige %s error: %s\n",
             driverName, functionName, configFileName, e.what());
