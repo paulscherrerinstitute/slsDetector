@@ -96,6 +96,10 @@ Configuration
 
 Release Notes
 -------------
+* 9.2.0 - 05.06.2025
+  1. slsDetector library updated to 9.2.0
+  2. Mark detector disconnected when config fails.
+
 * 9.0.0 - 27.11.2024
   1. slsDetector library updated to 9.0.0
 
