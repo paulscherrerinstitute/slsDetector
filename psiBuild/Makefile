@@ -4,7 +4,7 @@ EXCLUDE_VERSIONS=3.13 3.14
 BUILDCLASSES=Linux
 ARCH_FILTER=%-x86_64
 
-LIBVERSION=v9.0.0
+LIBVERSION=v9.2.0
 
 SOURCES+=../slsDetectorApp/slsDetectorSrc/slsDetectorDriver.cpp
 DBDS+=../slsDetectorApp/slsDetectorSrc/slsDetectorSupport.dbd
