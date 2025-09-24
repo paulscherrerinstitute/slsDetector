@@ -17,8 +17,8 @@ USR_LDFLAGS += -L../../slsDetectorApp/slsDetectorSupport/os/$(ARCH)
 
 USR_LIBS += SlsDetector SlsSupport
 
-SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so.9
-SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so.9
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsSupport.so.10
+SHRLIBS += ../slsDetectorApp/slsDetectorSupport/os/$(ARCH)/libSlsDetector.so.10
 
 TEMPLATES += ../slsDetectorApp/Db/slsDetector.template
 TEMPLATES += ../slsDetectorApp/Db/slsDetector_settings.req
