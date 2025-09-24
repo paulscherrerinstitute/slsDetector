@@ -96,6 +96,9 @@ Configuration
 
 Release Notes
 -------------
+* 10.0.0 - 24.09.2025
+  1. slsDetector library updated to 10.0.0, which requires c++17.
+
 * 9.2.0 - 05.06.2025
   1. slsDetector library updated to 9.2.0
   2. Mark detector disconnected when config fails.

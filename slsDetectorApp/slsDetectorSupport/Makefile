@@ -20,9 +20,9 @@ INC += sls/string_utils.h
 # These libraries are built from slsDetectorSoftware
 ifeq ($(ARCH_CLASS), x86_64)
 LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsSupport.so
-LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsSupport.so.9
+LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsSupport.so.10
 LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsDetector.so
-LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsDetector.so.9
+LIB_INSTALLS_Linux += ../os/linux-x86_64/libSlsDetector.so.10
 endif
 
 #=============================

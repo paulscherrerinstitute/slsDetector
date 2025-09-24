@@ -6,7 +6,7 @@ include $(TOP)/configure/CONFIG
 
 
 LIBRARY_IOC_Linux += slsDetectorDriver
-USR_CXXFLAGS += -std=c++11
+USR_CXXFLAGS += -std=c++17
 LIB_SRCS += slsDetectorDriver.cpp
 LIB_LIBS += SlsDetector
 
